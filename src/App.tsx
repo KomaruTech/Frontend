@@ -1,17 +1,20 @@
-import './App.css'
-import {Calendar} from "@heroui/react";
-import {parseDate} from "@internationalized/date";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './pages/LoginPage/Login';
+import Dashboard from './pages/Dashboard';
+import PrivateRoute from './routes/PrivateRoute';
 
 function App() {
-
   return (
-    <>
-    <div className="flex gap-x-4">
-      <Calendar aria-label="Date (No Selection)" />
-    </div>
-      
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route element={<PrivateRoute />}>
+          <Route path="/" element={<Dashboard />} />
+        </Route>
+        <Route path="*" element={<div>Страница не найдена 404</div>} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
