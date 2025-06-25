@@ -30,10 +30,10 @@ const events = [
 
 function WeeklyEvents() {
   return (
-    <div className="flex justify-end items-start min-h-screen pr-5 pt-40">
+    <div className="flex justify-end items-start  pr-5 pt-40">
       {/* Фоновый блок чуть больше формы */}
       <div
-        className="w-[320px] h-auto p-4 rounded-2xl shadow-2xl relative"
+        className="w-[320px] p-4 rounded-2xl shadow-2xl relative"
         style={{
           backgroundImage: "url('/background.png')",
           backgroundSize: "cover",
@@ -43,14 +43,14 @@ function WeeklyEvents() {
       >
         {/* Форма внутри фона с отступами */}
         <Card className="w-[260px] mx-auto rounded-xl overflow-hidden shadow-lg">
-          <CardBody className="bg-white px-3 py- text-black">
-            <h2 className="text-md font-semibold text-center mb-3">
-              Мероприятия
+          <CardBody className="bg-white py-1 text-black">
+            <h2 className="text-md font-semibold text-center mb-3 text-[#004e9e]">
+              Мероприятия на неделю
             </h2>
             {events.map((event, index) => (
               <div
                 key={index}
-                className="bg-white border border-gray-200 rounded-md p-2 mb-3 shadow-sm"
+                className="bg-white border border-gray-200 rounded-md p-2  shadow-sm"
               >
                 <div className="text-[#004e9e] text-sm font-semibold truncate">
                   {event.title}
