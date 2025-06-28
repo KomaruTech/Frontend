@@ -1,7 +1,9 @@
 import axios from 'axios';
+import {configDotenv} from "dotenv";
+configDotenv()
 
 const api = axios.create({
-    baseURL: 'http://localhost:5124/api/v1/',
+    baseURL: process.env.LOCAL_HOST,
 });
 
 api.interceptors.request.use((config) => {
