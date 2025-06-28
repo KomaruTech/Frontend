@@ -1,15 +1,14 @@
+// src/shared/api/index.ts
 import axios from 'axios';
-import {configDotenv} from "dotenv";
-configDotenv()
 
 const api = axios.create({
-    baseURL: process.env.LOCAL_HOST,
+    baseURL: import.meta.env.VITE_LOCAL_HOST || 'http://localhost:5124', // Добавил дефолтное значение
 });
 
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`; // Исправлен шаблонный литерал
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });

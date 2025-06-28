@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input, Button } from '@heroui/react';
 import { EyeFilledIcon, EyeSlashFilledIcon } from '../../../shared/ui/components/IconsInput';
-import { LoginSchema } from '../../../shared/lib/utils/validationSchemas'; // Предполагаем, что LoginSchema адаптирован
+import { LoginSchema } from '../../../shared/lib/utils/validationSchemas';
 
 const LoginForm = () => {
     const dispatch = useDispatch<AppDispatch>();
