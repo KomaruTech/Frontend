@@ -2,9 +2,10 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@app/store'; // Импорт RootState для типизации
+import {Image} from '@heroui/react'
 
 interface WelcomeCardProps {
-    userName?: string | null; // Опциональное пропс для переопределения имени
+    userName?: string | null;
 }
 
 export const WelcomeCard: React.FC<WelcomeCardProps> = ({ userName }) => {
@@ -35,20 +36,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({ userName }) => {
                 <p className="text-gray-600 text-base">Рады видеть тебя снова.</p>
             </div>
 
-            <div
-                className="
-                    absolute top-0 right-0 h-full
-                    w-[150px] sm:w-[200px] md:w-[250px]
-                    rounded-r-lg
-                "
-                style={{
-                    // Убедитесь, что путь к изображению верный и доступен
-                    backgroundImage: 'url(/src/shared/assets/images/WelcomeCardPattern.svg)',
-                    backgroundSize: 'contain',
-                    backgroundPosition: 'center right',
-                    backgroundRepeat: 'no-repeat',
-                }}
-            ></div>
+            <Image src='./' ></Image>
         </div>
     );
 };
