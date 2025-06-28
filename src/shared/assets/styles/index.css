@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+.error-message {
+    color: red;
+}
+/* Любые другие глобальные стили, если есть */
