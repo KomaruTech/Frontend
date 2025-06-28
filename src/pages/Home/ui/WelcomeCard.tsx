@@ -1,7 +1,7 @@
 // src/pages/home/ui/WelcomeCard.tsx
 import React from 'react';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../../../app/store'; // Импорт RootState для типизации
+import type { RootState } from '@app/store'; // Импорт RootState для типизации
 
 interface WelcomeCardProps {
     userName?: string | null; // Опциональное пропс для переопределения имени

@@ -1,10 +1,10 @@
 // src/app/router/app-router.tsx
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import LoginPage from '../../pages/Login';
-import { PrivateRoute } from '../../shared/ui/layout/PrivateRoute';
-import { AuthRedirectGuard } from '../../shared/lib/hooks/useAuthRedirectGuard';
-import HomePage from "../../pages/Home";
+import LoginPage from '@pages/Login';
+import { PrivateRoute } from '@shared/ui/layout/PrivateRoute.tsx';
+import { AuthRedirectGuard } from '@shared/lib/hooks/useAuthRedirectGuard.tsx';
+import HomePage from "@pages/Home";
 
 export const AppRouter: React.FC = () => {
     return (

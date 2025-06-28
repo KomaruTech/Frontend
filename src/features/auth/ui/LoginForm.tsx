@@ -1,13 +1,13 @@
 import { Formik } from 'formik';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../model';
-import type { AppDispatch } from '../../../app/store'; // Correct path to AppDispatch
+import type { AppDispatch } from '@app/store'; // Correct path to AppDispatch
 import { login } from '../api/authApi';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input, Button } from '@heroui/react';
-import { EyeFilledIcon, EyeSlashFilledIcon } from '../../../shared/ui/components/IconsInput';
-import { LoginSchema } from '../../../shared/lib/utils/validationSchemas';
+import { EyeFilledIcon, EyeSlashFilledIcon } from '@shared/ui/components/IconsInput';
+import { LoginSchema } from '@shared/lib/utils/validationSchemas';
 
 const LoginForm = () => {
     const dispatch = useDispatch<AppDispatch>();

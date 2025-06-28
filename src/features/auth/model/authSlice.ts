@@ -1,6 +1,6 @@
 // src/features/auth/model/authSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AuthState, User, LoginResponse } from '../../../entities/auth'; // Импортируем типы
+import type { AuthState, User, LoginResponse } from '@entities/auth'; // Импортируем типы
 
 const getInitialAuthState = (): AuthState => {
     try {

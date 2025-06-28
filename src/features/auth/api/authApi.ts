@@ -1,6 +1,6 @@
 // src/features/auth/api/authApi.ts
-import api from '../../../shared/api';
-import type { LoginPayload, LoginResponse} from '../../../entities/auth';
+import api from '@shared/api';
+import type { LoginPayload, LoginResponse} from '@entities/auth';
 
 export const login = async (payload: LoginPayload): Promise<LoginResponse> => {
     try {
