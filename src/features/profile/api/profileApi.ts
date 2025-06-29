@@ -1,5 +1,5 @@
 import api from '@shared/api'; // Импортируем ваш актуальный API-клиент
-import type { UserProfile, UpdateProfilePayload, ChangePasswordPayload } from '@entities/user/types';
+import type { UserProfile, UpdateProfilePayload, ChangePasswordPayload } from '@entities/user/model/types.ts';
 
 export const fetchMyProfile = async (userLogin: string): Promise<UserProfile> => {
     try {
