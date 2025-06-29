@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_LOCAL_HOST || 'http://localhost:5124/api/v1',
+    baseURL: import.meta.env.VITE_LOCAL_HOST
 });
 
 api.interceptors.request.use((config) => {
@@ -12,5 +12,4 @@ api.interceptors.request.use((config) => {
     }
     return config;
 });
-
 export default api;
