@@ -1,6 +1,7 @@
 // src/pages/home/ui/HomePage.tsx
 import React from 'react';
 import { WelcomeCard } from './WelcomeCard'; // Компонент, специфичный для этой страницы
+import SidebarMenu from './main_menu';
 
 const HomePage: React.FC = () => {
     return (
@@ -11,7 +12,9 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
+                    <SidebarMenu />
                     <WelcomeCard />
+                    
 
                 </div>
             </main>
