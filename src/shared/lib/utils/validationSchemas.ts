@@ -52,3 +52,45 @@ export const UpdateProfileSchema = yup.object().shape({
         )
         .transform(value => (value === '' ? null : value))
 });
+
+
+export const eventSchema = yup.object().shape({
+    title: yup.string()
+        .required("Название обязательно")
+        .min(4, "Название должно быть от 4 до 64 символов")
+        .max(64, "Название должно быть от 4 до 64 символов"),
+    description: yup.string()
+        .required("Описание обязательно")
+        .min(16, "Описание должно быть от 16 до 10000 символов")
+        .max(10000, "Описание должно быть от 16 до 10000 символов"),
+    type: yup.string()
+        .required("Выберите тип мероприятия"),
+    startTime: yup.string()
+        .required("Укажите время начала")
+        .test(
+            'is-in-future',
+            'Начало должно быть минимум через 2 часа',
+            (value) => {
+                if (!value) return false;
+                const now = new Date();
+                const startDate = new Date(`${now.toDateString()} ${value}`);
+                return startDate.getTime() > now.getTime() + 2 * 60 * 60 * 1000;
+            }
+        ),
+    endTime: yup.string()
+        .test(
+            'is-after-start',
+            'Окончание должно быть минимум на 10 минут позже начала',
+            function(value) {
+                const { startTime } = this.parent;
+                if (!value || !startTime) return true; // Not required, so valid if empty
+                const now = new Date();
+                const startDate = new Date(`${now.toDateString()} ${startTime}`);
+                const endDate = new Date(`${now.toDateString()} ${value}`);
+                return endDate.getTime() > startDate.getTime() + 10 * 60 * 1000;
+            }
+        ),
+    address: yup.string(),
+    participants: yup.array().of(yup.object()),
+    keywords: yup.array().of(yup.string()),
+});
