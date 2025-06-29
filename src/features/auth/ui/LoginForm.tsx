@@ -32,7 +32,7 @@ const LoginForm = () => {
                     navigate('/');
                 } catch (err: any) {
                     console.error('Login error:', err);
-                    setError(err.response?.data?.message || err.message || 'Ошибка авторизации');
+                    setError(err.response?.data?.title || 'Ошибка авторизации');
                 } finally {
                     setSubmitting(false);
                 }

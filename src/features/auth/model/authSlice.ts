@@ -1,11 +1,39 @@
-// src/features/auth/model/authSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AuthState, User, LoginResponse } from '@entities/auth'; // Импортируем типы
+
+interface AuthState {
+    user: {
+        id: string;
+        login: string;
+        name: string;
+        surname?: string; // Добавлено
+        email: string;
+        telegramId?: string; // Добавлено
+        avatarUrl?: string; // Добавлено
+    } | null;
+    token: string | null;
+    isLoading: boolean;
+    error: string | null;
+}
+
+interface UserAuth {
+    id: string;
+    login: string;
+    name: string;
+    surname?: string; // Добавлено
+    email: string;
+    telegramId?: string; // Добавлено
+    avatarUrl?: string; // Добавлено
+}
+
+interface LoginResponse {
+    user: UserAuth;
+    token: string;
+}
 
 const getInitialAuthState = (): AuthState => {
     try {
         const storedUser = localStorage.getItem('user');
-        const userObject: User | null = storedUser ? JSON.parse(storedUser) : null;
+        const userObject: AuthState['user'] = storedUser ? JSON.parse(storedUser) : null;
         const token = localStorage.getItem('token');
         return {
             user: userObject,
@@ -32,7 +60,7 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        setAuthData: (state, action: PayloadAction<{ user: User | null; token: string | null } | null>) => {
+        setAuthData: (state, action: PayloadAction<{ user: AuthState['user']; token: string | null } | null>) => {
             if (action.payload === null) {
                 state.user = null;
                 state.token = null;
@@ -66,7 +94,6 @@ const authSlice = createSlice({
             localStorage.removeItem('user');
             localStorage.removeItem('token');
         },
-        // Добавляем отдельный logout редьюсер для использования в LogoutButton
         logout: (state) => {
             state.user = null;
             state.token = null;
@@ -74,10 +101,16 @@ const authSlice = createSlice({
             state.error = null;
             localStorage.removeItem('user');
             localStorage.removeItem('token');
-        }
+        },
+        setUserProfileData: (state, action: PayloadAction<Partial<AuthState['user']>>) => {
+            if (state.user) {
+                state.user = { ...state.user, ...action.payload };
+                localStorage.setItem('user', JSON.stringify(state.user)); // Обновляем localStorage
+            }
+        },
     },
 });
 
-export const { loginSuccess, logout, loginPending, loginFailure, setAuthData } = authSlice.actions;
-export const authActions = authSlice.actions; // Объект со всеми экшенами
-export const authReducer = authSlice.reducer; // Экспорт редьюсера по умолчанию
+export const { loginSuccess, logout, loginPending, loginFailure, setAuthData, setUserProfileData } = authSlice.actions;
+export const authActions = authSlice.actions;
+export const authReducer = authSlice.reducer;
