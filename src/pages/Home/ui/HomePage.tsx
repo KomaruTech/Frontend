@@ -1,6 +1,7 @@
 // src/pages/home/ui/HomePage.tsx
 import React from 'react';
 import { WelcomeCard } from './WelcomeCard'; // Компонент, специфичный для этой страницы
+import OfferEventCar from './NewIvent';
 
 const HomePage: React.FC = () => {
     return (
@@ -14,6 +15,12 @@ const HomePage: React.FC = () => {
                     <WelcomeCard />
 
                 </div>
+                <div className="absolute top-20 right-20">
+
+                    <OfferEventCar />
+
+                </div>
+
             </main>
         </div>
     );
