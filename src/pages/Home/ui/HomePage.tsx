@@ -4,6 +4,7 @@ import React from 'react';
 import { WelcomeCard } from "@widgets/WelcomeCard";
 import { CustomCalendar } from "@widgets/CustomCalendar";
 import { Header } from "@widgets/Header";
+import OfferEventCar from './NewIvent';
 
 const HomePage: React.FC = () => {
     return (
@@ -22,6 +23,12 @@ const HomePage: React.FC = () => {
                         <WelcomeCard />
                     </div>
                 </div>
+                <div className="absolute top-20 right-20">
+
+                    <OfferEventCar />
+
+                </div>
+
             </main>
         </div>
     );
