@@ -4,8 +4,8 @@ export interface UserProfile {
     name: string;
     surname: string;
     email: string;
-    telegramId?: string;
-    avatarUrl?: string;
+    telegramUsername:  string | null;
+    avatarUrl: string | null ;
 }
 
 export interface UpdateProfilePayload {
