@@ -12,7 +12,7 @@ export interface UpdateProfilePayload {
     name: string;
     surname: string;
     email: string;
-    telegramId: string | null | undefined;
+    telegramUsername: string | null | undefined;
 }
 
 export interface ChangePasswordPayload {
