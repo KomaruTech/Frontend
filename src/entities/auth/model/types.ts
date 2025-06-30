@@ -8,9 +8,8 @@ export interface User {
     surname: string;
     role: string;
     email: string;
-    telegramId: string | null;
-    notificationPreferencesId: string;
-    avatar: string | null;
+    telegramUsername: string | null;
+    avatarUrl: string | null;
 }
 
 // Интерфейс для данных, отправляемых при входе
@@ -23,12 +22,4 @@ export interface LoginPayload {
 export interface LoginResponse {
     user: User;
     token: string;
-}
-
-// Интерфейс для состояния Redux-слайса аутентификации
-export interface AuthState {
-    user: User | null;
-    token: string | null;
-    isLoading: boolean;
-    error: string | null;
 }
