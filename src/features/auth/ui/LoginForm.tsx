@@ -1,12 +1,12 @@
 import { Formik } from 'formik';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../model';
-import type { AppDispatch } from '@app/store'; // Correct path to AppDispatch
+import type { AppDispatch } from '@app/store';
 import { login } from '../api/authApi';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input, Button } from '@heroui/react';
-import { EyeFilledIcon, EyeSlashFilledIcon } from '@shared/ui/components/IconsInput';
+import { EyeFilledIcon, EyeSlashFilledIcon } from '@shared/ui/icons/IconsInput';
 import { LoginSchema } from '@shared/lib/utils/validationSchemas';
 
 const LoginForm = () => {
@@ -20,12 +20,11 @@ const LoginForm = () => {
         <Formik
             initialValues={{ login: '', password: '' }}
             validationSchema={LoginSchema}
-            validateOnChange={true}
-            validateOnBlur={true}
+            validateOnChange
+            validateOnBlur
             onSubmit={async (values, { setSubmitting }) => {
                 setError(null);
                 try {
-                    // 'values' теперь содержит 'login' и 'password', что соответствует LoginPayload
                     const { user, token } = await login(values);
                     console.log('Login successful:', user, token);
                     dispatch(loginSuccess({ user, token }));
@@ -51,7 +50,7 @@ const LoginForm = () => {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isRequired
-                            className='mb-[50px]'
+                            className="mb-[50px]"
                             isInvalid={!!(touched.login && errors.login)}
                             errorMessage={touched.login && errors.login ? errors.login : undefined}
                         />
@@ -77,7 +76,7 @@ const LoginForm = () => {
                                 </button>
                             }
                             placeholder="Введите пароль"
-                            type={isVisible ? "text" : "password"}
+                            type={isVisible ? 'text' : 'password'}
                             size="lg"
                             value={values.password}
                             onChange={handleChange}
