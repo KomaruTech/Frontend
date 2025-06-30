@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -28,10 +27,10 @@ import {
     updateProfilePending,
     updateProfileSuccess,
 } from "@features/profile/model/profileSlice";
+// Make sure this import points to your updated profileApi.ts
 import { changeMyPassword, fetchMyProfile, updateMyProfile } from "@features/profile/api/profileApi";
 import { setUserProfileData } from '@features/auth/model/authSlice';
 
-// Предполагается, что RootState определен в другом месте
 interface RootState {
     auth: {
         user: { id: string; login: string; name: string; surname?: string; email: string; avatarUrl?: string } | null;
@@ -83,7 +82,6 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ isOpen, onOpenChange, title, 
 
 const EditMyProfilePage: React.FC = () => {
     const dispatch = useDispatch();
-    useNavigate();
     const authUser = useSelector((state: RootState) => state.auth.user);
 
     const {
@@ -103,10 +101,10 @@ const EditMyProfilePage: React.FC = () => {
     const [alertType, setAlertType] = useState<'success' | 'error'>('success');
 
     const [profileFormData, setProfileFormData] = useState<UpdateProfilePayload>({
+        telegramUsername: undefined,
         name: '',
         surname: '',
         email: '',
-        telegramId: undefined,
     });
 
     const [passwordFormData, setPasswordFormData] = useState<ChangePasswordPayload & { confirmPassword: string }>({
@@ -120,12 +118,13 @@ const EditMyProfilePage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (authUser?.login && !profile && !isLoading && !error) {
+        if (authUser?.id && !profile && !isLoading && !error) {
             dispatch(fetchProfilePending());
-            fetchMyProfile(authUser.login)
+            fetchMyProfile(authUser.id)
                 .then(data => dispatch(fetchProfileSuccess(data)))
                 .catch(err => {
-                    const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
+                    // *** FIX: Rely on profileApi.ts to throw a standard Error object with the message ***
+                    const msg = err instanceof Error ? err.message : 'Неизвестная ошибка загрузки профиля';
                     dispatch(fetchProfileFailure(msg));
                     setAlertTitle('Ошибка загрузки');
                     setAlertMessage(msg);
@@ -141,7 +140,7 @@ const EditMyProfilePage: React.FC = () => {
                 name: profile.name,
                 surname: profile.surname ?? '',
                 email: profile.email,
-                telegramId: profile.telegramId ?? undefined,
+                telegramUsername: profile.telegramUsername ?? undefined,
             });
         }
     }, [profile]);
@@ -175,7 +174,8 @@ const EditMyProfilePage: React.FC = () => {
 
     const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setProfileFormData(prev => ({ ...prev, [name]: value }));
+        const updatedName = name === 'telegramId' ? 'telegramUsername' : name;
+        setProfileFormData(prev => ({ ...prev, [updatedName]: value }));
     };
 
     const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,7 +188,7 @@ const EditMyProfilePage: React.FC = () => {
         dispatch(updateProfilePending());
         try {
             await updateMyProfile(profileFormData);
-            const fresh = await fetchMyProfile(authUser!.login);
+            const fresh = await fetchMyProfile(authUser!.id);
             dispatch(updateProfileSuccess(fresh));
             dispatch(setUserProfileData({ ...fresh }));
             setAlertTitle('Успех!');
@@ -196,7 +196,8 @@ const EditMyProfilePage: React.FC = () => {
             setAlertType('success');
             openAlert();
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
+            // *** FIX: Rely on profileApi.ts to throw a standard Error object with the message ***
+            const msg = err instanceof Error ? err.message : 'Неизвестная ошибка обновления профиля';
             dispatch(updateProfileFailure(msg));
         }
     };
@@ -222,7 +223,8 @@ const EditMyProfilePage: React.FC = () => {
             await changeMyPassword({ oldPassword: passwordFormData.oldPassword, newPassword: passwordFormData.newPassword });
             dispatch(changePasswordSuccesss());
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
+            // *** FIX: Rely on profileApi.ts to throw a standard Error object with the message ***
+            const msg = err instanceof Error ? err.message : 'Неизвестная ошибка изменения пароля';
             dispatch(changePasswordFailure(msg));
         }
     };
@@ -230,8 +232,6 @@ const EditMyProfilePage: React.FC = () => {
     if (isLoading) {
         return <div className="fixed inset-0 flex justify-center items-center"><Spinner /></div>;
     }
-
-    // ... (error and auth checks can remain here) ...
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 sm:p-8 flex justify-center">
@@ -248,7 +248,6 @@ const EditMyProfilePage: React.FC = () => {
 
                 <Card className="shadow-xl p-6 sm:p-8 w-full">
                     <CardBody>
-                        {/* --- Profile Settings Form --- */}
                         <form onSubmit={onProfileFormSubmit}>
                             <h3 className="text-xl font-semibold text-gray-800 mb-6">Основные настройки</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -282,7 +281,7 @@ const EditMyProfilePage: React.FC = () => {
                                     name="telegramId"
                                     placeholder="@ваш_telegram_id"
                                     variant="bordered"
-                                    value={profileFormData.telegramId || ''}
+                                    value={profileFormData.telegramUsername || ''}
                                     onChange={handleProfileInputChange}
                                 />
                             </div>
