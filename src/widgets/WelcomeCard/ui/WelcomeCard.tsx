@@ -3,7 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@app/store'; // Assuming @app/store defines RootState
 import { Image } from '@heroui/react';
-import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern.svg'; // Assuming this path is correct
+import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern2.svg'; // Assuming this path is correct
 
 interface WelcomeCardProps {
     userName?: string | null;
@@ -29,13 +29,12 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({ userName }) => {
                     Рады видеть тебя снова 👋
                 </p>
             </div>
-            <div className="relative flex-shrink-0 basis-1/3 hidden md:block">
+            <div className="relative flex-shrink-0 hidden md:block ">
                 <Image
                     src={WelcomeCardPattern}
                     alt="Декоративный узор"
                     className="
-                        absolute top-0 right-0
-                        h-full w-auto object-cover
+                         right-0 bottom-4 w-[300px] object-cover
                     "
                 />
             </div>
