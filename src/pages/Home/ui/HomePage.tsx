@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { WelcomeCard } from "@widgets/WelcomeCard";
-import { CustomCalendar } from "@widgets/CustomCalendar";
+import { CustomCalendar } from "@features/calendary";
 import { Header } from "@widgets/Header";
 import OfferEventCar from './NewIvent';
 
@@ -20,12 +20,11 @@ const HomePage: React.FC = () => {
     const dispatch = useDispatch();
     const authUser = useSelector((state: RootState) => state.auth.user);
 
-    // 🔒 Чтобы не делать повторные запросы
     const hasFetchedProfile = useRef(false);
 
     useEffect(() => {
         if (authUser?.id && !hasFetchedProfile.current) {
-            hasFetchedProfile.current = true; // ✅ Блокируем повтор
+            hasFetchedProfile.current = true;
             dispatch(fetchProfilePending());
             fetchMyProfile(authUser.id)
                 .then(data => {
