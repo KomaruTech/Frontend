@@ -1,12 +1,41 @@
 // src/pages/home/ui/HomePage.tsx
-import React from 'react';
-// These imports are now cleaner and directly from the 'widgets' layer's public API
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { WelcomeCard } from "@widgets/WelcomeCard";
 import { CustomCalendar } from "@widgets/CustomCalendar";
 import { Header } from "@widgets/Header";
 import OfferEventCar from './NewIvent';
 
+import {
+    fetchProfilePending,
+    fetchProfileSuccess,
+    fetchProfileFailure
+} from '@features/profile/model/profileSlice';
+import { fetchMyProfile } from '@features/profile/api/profileApi';
+import { setUserProfileData } from '@features/auth/model/authSlice';
+import type { RootState } from '@app/store';
+
 const HomePage: React.FC = () => {
+    const dispatch = useDispatch();
+    const authUser = useSelector((state: RootState) => state.auth.user);
+    const profileLoading = useSelector((state: RootState) => state.profile.isLoading);
+    useEffect(() => {
+        if (authUser?.id && !profileLoading) {
+            dispatch(fetchProfilePending());
+            fetchMyProfile(authUser.id)
+                .then(data => {
+                    dispatch(fetchProfileSuccess(data));
+                    dispatch(setUserProfileData({ ...authUser, ...data }));
+                })
+                .catch(err => {
+                    const msg = err instanceof Error ? err.message : 'Неизвестная ошибка при загрузке профиля на главной странице';
+                    dispatch(fetchProfileFailure(msg));
+                    console.error("Ошибка при загрузке профиля на главной странице:", msg);
+                });
+        }
+    }, [dispatch, authUser?.id, profileLoading]);
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <main className="flex-1 p-8 max-w-[1700px] mx-auto w-full">
@@ -14,7 +43,6 @@ const HomePage: React.FC = () => {
                     <h1 className="text-3xl font-semibold text-gray-800">Главная</h1>
                 </div>
                 <div className="flex flex-col lg:flex-row gap-6">
-                    {/* The order here might be adjusted based on your desired responsive layout */}
                     <div className="w-full lg:w-1/3 flex flex-col gap-4 order-1 lg:order-2 items-end max-h-[600px]">
                         <Header />
                         <div className="flex flex-col gap-4 h-full min-w-[320px]">

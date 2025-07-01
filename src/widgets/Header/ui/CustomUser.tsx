@@ -11,9 +11,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import { logout } from '@features/auth/model/authSlice.ts';
 import type { RootState } from "@app/store";
-import { useState, useEffect } from "react"; // <-- Импортируем хуки
+import { useState, useEffect } from "react";
 
-// Импортируем нашу API-функцию для загрузки аватара
 import { fetchMyAvatar } from "@features/profile/api/profileApi.ts";
 
 export default function CustomUser() {
@@ -81,7 +80,7 @@ export default function CustomUser() {
                     <Avatar
                         as="button"
                         className="transition-transform"
-                        src={finalAvatarSrc} // <-- ИЗМЕНЕНИЕ №1
+                        src={finalAvatarSrc}
                     />
                 </DropdownTrigger>
 
@@ -98,12 +97,12 @@ export default function CustomUser() {
                         ],
                     }}
                 >
-                    <DropdownSection showDivider aria-label="Profile & Actions">
+                    <DropdownSection showDivider aria-label="Профиль и Действия">
                         <DropdownItem key="profile" isReadOnly className="h-14 gap-2 opacity-100">
                             <User
                                 avatarProps={{
                                     size: "sm",
-                                    src: finalAvatarSrc, // <-- ИЗМЕНЕНИЕ №2
+                                    src: finalAvatarSrc,
                                 }}
                                 classNames={{
                                     name: "text-default-600",
@@ -117,7 +116,7 @@ export default function CustomUser() {
                             Редактировать профиль
                         </DropdownItem>
                     </DropdownSection>
-                    <DropdownSection aria-label="Help & Feedback">
+                    <DropdownSection aria-label="Помощь и Обратная связь">
                         <DropdownItem key="logout" color="danger" onPress={handleLogout}>
                             Выйти
                         </DropdownItem>
