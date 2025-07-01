@@ -77,7 +77,7 @@ export const AvatarManagementSection: React.FC<AvatarManagementSectionProps> = (
         dispatch(deleteAvatarPending());
         try {
             await deleteMyAvatar();
-            dispatch(setUserProfileData({ ...authUser!, avatarUrl: undefined })); // Обновляем authUser сразу
+            dispatch(setUserProfileData({ ...authUser!, avatarUrl: undefined }));
             triggerReloadWithAlert('Успех!', 'Аватар успешно удален.', 'success');
             window.location.reload();
         } catch (err: unknown) {
@@ -92,10 +92,9 @@ export const AvatarManagementSection: React.FC<AvatarManagementSectionProps> = (
             } else if (err instanceof Error) {
                 msg = err.message;
             }
-            // openAlertDialog('Ошибка удаления аватара', msg, 'error'); // Заменено
             triggerReloadWithAlert('Ошибка удаления аватара', msg, 'error');
             dispatch(deleteAvatarFailure(msg));
-            window.location.reload(); // Перезагрузка страницы
+            window.location.reload();
         }
     };
 
@@ -107,7 +106,6 @@ export const AvatarManagementSection: React.FC<AvatarManagementSectionProps> = (
                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatarFileChange}/>
                     Выбрать файл аватара
                 </label>
-                {/* Удалены Avatar и span для отображения выбранного файла */}
                 <Button color="primary" onPress={handleAvatarUpload} isLoading={isUploadingAvatar}
                         isDisabled={!selectedAvatarFile}>
                     Загрузить аватар

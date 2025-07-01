@@ -32,11 +32,7 @@ export default function SearchEvents() {
             };
 
             const results = await searchEvents(payload);
-
-            // Ensure results is an array
             const list = Array.isArray(results) ? results : [results];
-
-            // Filter out events missing required fields
             const filtered = list.filter(event => event.description && event.timeStart && event.timeEnd);
             setSearchResults(filtered);
         } catch (err: any) {
