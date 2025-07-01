@@ -138,8 +138,8 @@ export default function EventsPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-20 px-8 py-14 relative">
       {/* Левая панель */}
+      
       <Main_menu />
-
       {/* Основной контент */}
       <div className="flex flex-1 flex-col gap-6">
         {/* Переключатель вкладок */}
