@@ -1,5 +1,4 @@
-// src/features/search/ui/SearchEvents.tsx
-import  { useState, useCallback, useEffect, type ChangeEvent } from 'react';
+import { useState, useCallback, useEffect, type ChangeEvent } from 'react';
 import { Input, Spinner } from "@heroui/react";
 import { SearchIcon } from "@shared/ui/icons/SearchIcon";
 import { searchEvents, type Event, type SearchEventRequest } from '@features/search/api/searchApi';
@@ -14,7 +13,9 @@ export default function SearchEvents() {
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     const performSearch = useCallback(async (query: string) => {
-        if (!query.trim()) {
+        const trimmedQuery = query.trim();
+
+        if (!trimmedQuery) {
             setSearchResults([]);
             setError(null);
             return;
@@ -25,10 +26,19 @@ export default function SearchEvents() {
 
         try {
             const payload: SearchEventRequest = {
-                name: query.trim()
+                name: trimmedQuery,
+                status: 'confirmed',
+                // keywords removed for name-only search
             };
+
             const results = await searchEvents(payload);
-            setSearchResults(results);
+
+            // Ensure results is an array
+            const list = Array.isArray(results) ? results : [results];
+
+            // Filter out events missing required fields
+            const filtered = list.filter(event => event.description && event.timeStart && event.timeEnd);
+            setSearchResults(filtered);
         } catch (err: any) {
             console.error("Error searching events:", err);
             setError(err.message || 'Произошла ошибка при поиске.');
@@ -76,7 +86,7 @@ export default function SearchEvents() {
                         "!cursor-text",
                     ],
                 }}
-                placeholder="Поиск мероприятий..."
+                placeholder="Поиск мероприятий по названию..."
                 radius="lg"
                 value={searchTerm}
                 onChange={handleInputChange}
@@ -107,10 +117,14 @@ export default function SearchEvents() {
                         >
                             <h4 className="font-semibold text-gray-800 dark:text-white">{event.name}</h4>
                             <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {event.description || 'Нет описания'}
+                                {event.description!}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-500">
-                                {new Date(event.timeStart).toLocaleDateString()} - {new Date(event.timeEnd).toLocaleDateString()}
+                                {new Date(event.timeStart).toLocaleString('ru-RU', {
+                                    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                })} – {new Date(event.timeEnd).toLocaleString('ru-RU', {
+                                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                            })}
                             </p>
                         </div>
                     ))}

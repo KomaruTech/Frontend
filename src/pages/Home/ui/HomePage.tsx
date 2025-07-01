@@ -1,5 +1,5 @@
 // src/pages/home/ui/HomePage.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { WelcomeCard } from "@widgets/WelcomeCard";
@@ -19,9 +19,13 @@ import type { RootState } from '@app/store';
 const HomePage: React.FC = () => {
     const dispatch = useDispatch();
     const authUser = useSelector((state: RootState) => state.auth.user);
-    const profileLoading = useSelector((state: RootState) => state.profile.isLoading);
+
+    // 🔒 Чтобы не делать повторные запросы
+    const hasFetchedProfile = useRef(false);
+
     useEffect(() => {
-        if (authUser?.id && !profileLoading) {
+        if (authUser?.id && !hasFetchedProfile.current) {
+            hasFetchedProfile.current = true; // ✅ Блокируем повтор
             dispatch(fetchProfilePending());
             fetchMyProfile(authUser.id)
                 .then(data => {
@@ -29,12 +33,14 @@ const HomePage: React.FC = () => {
                     dispatch(setUserProfileData({ ...authUser, ...data }));
                 })
                 .catch(err => {
-                    const msg = err instanceof Error ? err.message : 'Неизвестная ошибка при загрузке профиля на главной странице';
+                    const msg = err instanceof Error
+                        ? err.message
+                        : 'Неизвестная ошибка при загрузке профиля на главной странице';
                     dispatch(fetchProfileFailure(msg));
                     console.error("Ошибка при загрузке профиля на главной странице:", msg);
                 });
         }
-    }, [dispatch, authUser?.id, profileLoading]);
+    }, [dispatch, authUser?.id]);
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -50,12 +56,10 @@ const HomePage: React.FC = () => {
                             <CustomCalendar />
                         </div>
                     </div>
-
                     <div className="w-full lg:w-2/3 order-2 lg:order-1">
                         <WelcomeCard />
                     </div>
                 </div>
-
             </main>
         </div>
     );

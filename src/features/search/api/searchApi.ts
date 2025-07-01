@@ -3,13 +3,13 @@ import api from '@shared/api';
 import axios, { AxiosError } from 'axios';
 import type { ApiErrorResponse } from '@shared/api/types';
 
-export interface SearchEventRequest {
+export type SearchEventRequest = {
     name?: string;
+    keywords?: string[];
     startSearchTime?: string;
     endSearchTime?: string;
-    status?: "pending" | "confirmed" | "cancelled";
-    keywords?: string[];
-}
+    status?: string;
+};
 
 export interface Event {
     id: string;
