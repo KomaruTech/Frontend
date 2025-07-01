@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-// ✅ Используем тип уже определённый выше, чтобы не дублировать поля
 export interface UserAuth {
     id: string;
     login: string;
