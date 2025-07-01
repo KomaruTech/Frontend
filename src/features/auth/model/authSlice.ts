@@ -1,28 +1,22 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-interface AuthState {
-    user: {
-        id: string;
-        login: string;
-        name: string;
-        surname?: string; // Добавлено
-        email: string;
-        telegramId?: string; // Добавлено
-        avatarUrl?: string; // Добавлено
-    } | null;
-    token: string | null;
-    isLoading: boolean;
-    error: string | null;
-}
-
-interface UserAuth {
+// ✅ Используем тип уже определённый выше, чтобы не дублировать поля
+export interface UserAuth {
     id: string;
     login: string;
     name: string;
-    surname?: string; // Добавлено
+    surname: string;
+    role: string;
     email: string;
-    telegramId?: string; // Добавлено
-    avatarUrl?: string; // Добавлено
+    telegramUsername: string | null;
+    avatarUrl: string | null;
+}
+
+interface AuthState {
+    user: UserAuth | null;
+    token: string | null;
+    isLoading: boolean;
+    error: string | null;
 }
 
 interface LoginResponse {
@@ -33,11 +27,11 @@ interface LoginResponse {
 const getInitialAuthState = (): AuthState => {
     try {
         const storedUser = localStorage.getItem('user');
-        const userObject: AuthState['user'] = storedUser ? JSON.parse(storedUser) : null;
+        const userObject: UserAuth | null = storedUser ? JSON.parse(storedUser) : null;
         const token = localStorage.getItem('token');
         return {
             user: userObject,
-            token: token,
+            token,
             isLoading: false,
             error: null,
         };
@@ -60,7 +54,10 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        setAuthData: (state, action: PayloadAction<{ user: AuthState['user']; token: string | null } | null>) => {
+        setAuthData: (
+            state,
+            action: PayloadAction<{ user: UserAuth | null; token: string | null } | null>
+        ) => {
             if (action.payload === null) {
                 state.user = null;
                 state.token = null;
@@ -102,15 +99,23 @@ const authSlice = createSlice({
             localStorage.removeItem('user');
             localStorage.removeItem('token');
         },
-        setUserProfileData: (state, action: PayloadAction<Partial<AuthState['user']>>) => {
+        setUserProfileData: (state, action: PayloadAction<Partial<UserAuth>>) => {
             if (state.user) {
                 state.user = { ...state.user, ...action.payload };
-                localStorage.setItem('user', JSON.stringify(state.user)); // Обновляем localStorage
+                localStorage.setItem('user', JSON.stringify(state.user));
             }
         },
     },
 });
 
-export const { loginSuccess, logout, loginPending, loginFailure, setAuthData, setUserProfileData } = authSlice.actions;
+export const {
+    loginSuccess,
+    logout,
+    loginPending,
+    loginFailure,
+    setAuthData,
+    setUserProfileData,
+} = authSlice.actions;
+
 export const authActions = authSlice.actions;
 export const authReducer = authSlice.reducer;

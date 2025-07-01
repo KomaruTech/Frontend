@@ -1,4 +1,4 @@
-// src/shared/ui/components/IconsInput.tsx
+// src/shared/ui/icons/IconsInput.tsx
 import React from 'react';
 import type { JSX } from 'react/jsx-runtime';
 

@@ -1,14 +1,14 @@
 import api from '@shared/api'; // Импортируем ваш актуальный API-клиент
-import type { UserProfile, UpdateProfilePayload, ChangePasswordPayload } from '@entities/user/types';
+import type { UserProfile, UpdateProfilePayload, ChangePasswordPayload } from '@entities/user/model/types.ts';
 
-export const fetchMyProfile = async (userLogin: string): Promise<UserProfile> => {
+export const fetchMyProfile = async (userId: string): Promise<UserProfile> => { // Changed userLogin to userId
     try {
-        // Исправлено: Используем правильный метод GET и маршрут с {login}
-        const response = await api.get<UserProfile>(`/User/${userLogin}`);
-        console.log(`API Call: GET /api/v1/User/${userLogin} - Response:`, response.data);
+        // Corrected: Using the userId in the API call
+        const response = await api.get<UserProfile>(`/User/${userId}`);
+        console.log(`API Call: GET /api/v1/User/${userId} - Response:`, response.data);
         return response.data;
     } catch (error) {
-        console.error(`API Call: GET /api/v1/User/${userLogin} - Error:`, error);
+        console.error(`API Call: GET /api/v1/User/${userId} - Error:`, error);
         throw error;
     }
 };

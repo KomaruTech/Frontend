@@ -8,19 +8,28 @@ import {
     Avatar,
 } from "@heroui/react";
 import {useDispatch, useSelector} from 'react-redux';
-import {Link} from "react-router-dom";
+import {useNavigate} from "react-router-dom"; // Import useNavigate
 import { logout } from '@features/auth/model/authSlice.ts';
 import type {RootState} from "@app/store";
 
 export default function CustomUser() {
     const dispatch = useDispatch();
+    const navigate = useNavigate(); // Initialize useNavigate
     const currentUser = useSelector((state: RootState) => state.auth.user);
+
     const handleLogout = () => {
         dispatch(logout());
     };
-    const avatarSrc = currentUser?.avatarUrl || "https://i.pravatar.cc/150?u=default_user_avatar";
-    const userName = currentUser ? `${currentUser.name} ${currentUser.surname || ''}` : "Гость";
+
+    // Handler for navigating to the profile edit page
+    const handleEditProfile = () => {
+        navigate("/profile/me/edit");
+    };
+
+    const avatarSrc = currentUser?.avatarUrl || undefined;
+    const userName = currentUser ? `${currentUser.name || ''} ${currentUser.surname || ''}`.trim() : "Гость";
     const userEmail = currentUser?.email || "";
+
     return (
         <div className="flex items-center gap-4">
             <Dropdown showArrow placement="bottom-end" radius="sm"
@@ -70,10 +79,8 @@ export default function CustomUser() {
                                 description={userEmail}
                             />
                         </DropdownItem>
-                        <DropdownItem key="edit-my-profile">
-                            <Link to="/profile/me/edit" className="block w-full h-full text-inherit no-underline">
-                                Редактировать профиль
-                            </Link>
+                        <DropdownItem key="edit-my-profile" onPress={handleEditProfile}> {/* Changed to onPress */}
+                            Редактировать профиль
                         </DropdownItem>
                     </DropdownSection>
                     <DropdownSection aria-label="Help & Feedback">

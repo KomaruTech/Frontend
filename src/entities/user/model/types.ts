@@ -4,15 +4,15 @@ export interface UserProfile {
     name: string;
     surname: string;
     email: string;
-    telegramId?: string;
-    avatarUrl?: string;
+    telegramUsername:  string | null;
+    avatarUrl: string | null ;
 }
 
 export interface UpdateProfilePayload {
     name: string;
     surname: string;
     email: string;
-    telegramId: string | null | undefined;
+    telegramUsername: string | null | undefined;
 }
 
 export interface ChangePasswordPayload {

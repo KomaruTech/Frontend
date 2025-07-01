@@ -1,5 +1,5 @@
 import {Input} from "@heroui/react";
-import {SearchIcon} from "@shared/ui/components/SearchIcon.tsx";
+import {SearchIcon} from "@shared/ui/icons/SearchIcon.tsx";
 
 
 export default function Search() {

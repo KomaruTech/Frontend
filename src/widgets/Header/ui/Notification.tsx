@@ -7,7 +7,7 @@ import {
     PopoverContent,
     useDisclosure
 } from "@heroui/react";
- import {NotificationIcon} from "@shared/ui/components/NotificationIcon.tsx";
+ import {NotificationIcon} from "@shared/ui/icons/NotificationIcon.tsx";
 
 type NotificationItem = {
     id: string;
