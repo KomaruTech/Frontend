@@ -29,13 +29,12 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({ userName }) => {
                     Рады видеть тебя снова 👋
                 </p>
             </div>
-            <div className="relative flex-shrink-0 basis-1/3 hidden md:block">
+            <div className="relative flex-shrink-0 hidden md:block ">
                 <Image
                     src={WelcomeCardPattern}
                     alt="Декоративный узор"
                     className="
-                        absolute top-0 right-0
-                        h-full w-auto object-cover
+                         right-0 bottom-4 w-[300px] object-cover
                     "
                 />
             </div>

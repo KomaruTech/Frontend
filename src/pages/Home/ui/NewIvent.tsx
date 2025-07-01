@@ -135,7 +135,7 @@ export default function OfferEventCard() {
 
   return (
       <>
-        <div className="w-full bg-[#0047FF] text-white rounded-xl p-4 shadow-md flex justify-between items-center relative overflow-hidden font-sans">
+        <div className="w-full bg-[#004e9e] text-white rounded-xl p-4 shadow-md flex justify-between items-center relative overflow-hidden font-sans">
           <div className="absolute inset-0 rounded-xl pointer-events-none">
             <svg className="absolute right-0 bottom-0 opacity-10 w-28 h-28" viewBox="0 0 100 100" fill="none">
               <circle cx="50" cy="50" r="40" stroke="white" strokeWidth="10" />

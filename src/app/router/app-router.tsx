@@ -6,6 +6,7 @@ import { PrivateRoute } from '@app/router/components/PrivateRoute.tsx';
 import { AuthRedirectGuard } from '@app/router/components/useAuthRedirectGuard.tsx';
 import HomePage from "@pages/Home";
 import EditMyProfilePage from "@pages/EditMyProfilePage/ui/EditMyProfilePage.tsx";
+import EventsPage from "@pages/EventsPage/ui/EventsPage.tsx"
 
 export const AppRouter: React.FC = () => {
     return (
@@ -17,6 +18,7 @@ export const AppRouter: React.FC = () => {
                 <Route element={<PrivateRoute />}>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/profile/me/edit" element={<EditMyProfilePage />} />
+                    <Route path="/events" element={<EventsPage />}/>
                 </Route>
                 <Route path="*" element={<div>404 - Страница не найдена</div>} />
             </Routes>
