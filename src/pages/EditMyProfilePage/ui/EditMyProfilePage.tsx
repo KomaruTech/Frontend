@@ -1,233 +1,106 @@
-import { useDispatch, useSelector } from 'react-redux';
+// src/pages/profile/ui/EditMyProfilePage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Spinner, Card, useDisclosure, Avatar, CardBody } from "@heroui/react";
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
-    Spinner,
-    Card,
-    useDisclosure,
-    Input,
-    Button,
-    Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
-    Avatar,
-    CardBody,
-    Divider
-} from "@heroui/react";
-
-import type { ChangePasswordPayload, UpdateProfilePayload } from "@entities/user/model/types.ts";
-import {
-    changePasswordPending,
-    changePasswordSuccesss,
-    changePasswordFailure,
-    clearChangePasswordStatus,
-    clearUpdateProfileStatus,
     fetchProfileFailure,
     fetchProfilePending,
     fetchProfileSuccess,
-    updateProfileFailure,
-    updateProfilePending,
-    updateProfileSuccess,
 } from "@features/profile/model/profileSlice";
-// Make sure this import points to your updated profileApi.ts
-import { changeMyPassword, fetchMyProfile, updateMyProfile } from "@features/profile/api/profileApi";
+import { fetchMyProfile, fetchMyAvatar } from "@features/profile/api/profileApi";
 import { setUserProfileData } from '@features/auth/model/authSlice';
+import type { RootState } from '@app/store';
 
-interface RootState {
-    auth: {
-        user: { id: string; login: string; name: string; surname?: string; email: string; avatarUrl?: string } | null;
-        token: string | null;
-        isLoading: boolean;
-        error: string | null;
-    };
-    profile: {
-        profile: import("@entities/user/model/types.ts").UserProfile | null;
-        isLoading: boolean;
-        error: string | null;
-        isUpdatingProfile: boolean;
-        updateProfileError: string | null;
-        isChangingPassword: boolean;
-        changePasswordError: string | null;
-        changePasswordSuccess: boolean;
-    };
-}
-
-interface AlertDialogProps {
-    isOpen: boolean;
-    onOpenChange: (isOpen: boolean) => void;
-    title: string;
-    message: string;
-    type: 'success' | 'error';
-}
-
-const AlertDialog: React.FC<AlertDialogProps> = ({ isOpen, onOpenChange, title, message, type }) => (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-            {(onClose) => (
-                <>
-                    <ModalHeader className={`${type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
-                        {title}
-                    </ModalHeader>
-                    <ModalBody>
-                        <p>{message}</p>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button color={type === 'error' ? 'danger' : 'primary'} onPress={onClose}>
-                            Закрыть
-                        </Button>
-                    </ModalFooter>
-                </>
-            )}
-        </ModalContent>
-    </Modal>
-);
+import { AvatarManagementSection } from "@features/profile/ui/AvatarManagementSection";
+import { ProfileSettingsSection } from "@features/profile/ui/ProfileSettingsSection";
+import { ChangePasswordSection } from "@features/profile/ui/ChangePasswordSection";
+import { AlertDialog } from "@shared/ui/AlertDialog";
 
 const EditMyProfilePage: React.FC = () => {
     const dispatch = useDispatch();
-    const authUser = useSelector((state: RootState) => state.auth.user);
+    const navigate = useNavigate(); // Для изменения URL-параметров
+    const [searchParams, setSearchParams] = useSearchParams(); // Для работы с URL-параметрами
 
-    const {
-        profile,
-        isLoading,
-        error,
-        isUpdatingProfile,
-        updateProfileError,
-        isChangingPassword,
-        changePasswordError,
-        changePasswordSuccess
-    } = useSelector((state: RootState) => state.profile);
+    const authUser = useSelector((state: RootState) => state.auth.user);
+    const { profile, isLoading, error } = useSelector((state: RootState) => state.profile);
 
     const { isOpen: isAlertOpen, onOpen: openAlert, onOpenChange: onAlertOpenChange } = useDisclosure();
     const [alertTitle, setAlertTitle] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error'>('success');
 
-    const [profileFormData, setProfileFormData] = useState<UpdateProfilePayload>({
-        telegramUsername: undefined,
-        name: '',
-        surname: '',
-        email: '',
-    });
+    const [currentProfileAvatarUrl, setCurrentProfileAvatarUrl] = useState<string | null>(null);
+    const handleOpenAlertDialog = useCallback((title: string, message: string, type: 'success' | 'error') => {
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertType(type);
+        openAlert();
+    }, [openAlert]);
 
-    const [passwordFormData, setPasswordFormData] = useState<ChangePasswordPayload & { confirmPassword: string }>({
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-    });
-
-    const resetPasswordForm = useCallback(() => {
-        setPasswordFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
-    }, []);
-
+    // **Новая функция:** Сохраняет сообщение в URL и перезагружает страницу
+    const triggerReloadWithAlert = useCallback((title: string, message: string, type: 'success' | 'error') => {
+        const newParams = new URLSearchParams();
+        newParams.set('alertTitle', encodeURIComponent(title));
+        newParams.set('alertMessage', encodeURIComponent(message));
+        newParams.set('alertType', type);
+        navigate(`?${newParams.toString()}`, { replace: true });
+    }, [navigate]);
+    useEffect(() => {
+        let objectUrl: string | null = null;
+        const loadAvatar = async () => {
+            if (authUser?.avatarUrl) {
+                try {
+                    const blob = await fetchMyAvatar(authUser.avatarUrl);
+                    objectUrl = URL.createObjectURL(blob);
+                    setCurrentProfileAvatarUrl(objectUrl);
+                } catch (error) {
+                    console.error("Не удалось загрузить аватар для заголовка профиля:", error);
+                    setCurrentProfileAvatarUrl(null);
+                }
+            } else {
+                setCurrentProfileAvatarUrl(null);
+            }
+        };
+        loadAvatar();
+        return () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [authUser?.avatarUrl]);
     useEffect(() => {
         if (authUser?.id && !profile && !isLoading && !error) {
             dispatch(fetchProfilePending());
             fetchMyProfile(authUser.id)
-                .then(data => dispatch(fetchProfileSuccess(data)))
+                .then(data => {
+                    dispatch(fetchProfileSuccess(data));
+                    dispatch(setUserProfileData({ ...authUser, ...data }));
+                })
                 .catch(err => {
-                    // *** FIX: Rely on profileApi.ts to throw a standard Error object with the message ***
-                    const msg = err instanceof Error ? err.message : 'Неизвестная ошибка загрузки профиля';
+                    const msg = err instanceof Error ? err.message : 'Неизвестная ошибка при загрузке профиля';
                     dispatch(fetchProfileFailure(msg));
-                    setAlertTitle('Ошибка загрузки');
-                    setAlertMessage(msg);
-                    setAlertType('error');
-                    openAlert();
+                    handleOpenAlertDialog('Ошибка загрузки', msg, 'error');
                 });
         }
-    }, [dispatch, authUser, isLoading, error, profile, openAlert]);
+    }, [dispatch, authUser, isLoading, error, profile, handleOpenAlertDialog]);
 
     useEffect(() => {
-        if (profile) {
-            setProfileFormData({
-                name: profile.name,
-                surname: profile.surname ?? '',
-                email: profile.email,
-                telegramUsername: profile.telegramUsername ?? undefined,
-            });
-        }
-    }, [profile]);
+        const title = searchParams.get('alertTitle');
+        const message = searchParams.get('alertMessage');
+        const type = searchParams.get('alertType');
 
-    useEffect(() => {
-        if (updateProfileError) {
-            setAlertTitle('Ошибка обновления профиля');
-            setAlertMessage(updateProfileError);
-            setAlertType('error');
-            openAlert();
-            dispatch(clearUpdateProfileStatus());
+        if (title && message && type) {
+            handleOpenAlertDialog(
+                decodeURIComponent(title),
+                decodeURIComponent(message),
+                type as 'success' | 'error'
+            );
+            setSearchParams({}, { replace: true });
         }
-    }, [updateProfileError, dispatch, openAlert]);
+    }, [searchParams, handleOpenAlertDialog, setSearchParams]);
 
-    useEffect(() => {
-        if (changePasswordError) {
-            setAlertTitle('Ошибка изменения пароля');
-            setAlertMessage(changePasswordError);
-            setAlertType('error');
-            openAlert();
-            dispatch(clearChangePasswordStatus());
-        } else if (changePasswordSuccess) {
-            setAlertTitle('Успех!');
-            setAlertMessage('Пароль успешно изменен.');
-            setAlertType('success');
-            openAlert();
-            resetPasswordForm();
-            dispatch(clearChangePasswordStatus());
-        }
-    }, [changePasswordError, changePasswordSuccess, dispatch, openAlert, resetPasswordForm]);
-
-    const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        const updatedName = name === 'telegramId' ? 'telegramUsername' : name;
-        setProfileFormData(prev => ({ ...prev, [updatedName]: value }));
-    };
-
-    const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setPasswordFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const onProfileFormSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        dispatch(updateProfilePending());
-        try {
-            await updateMyProfile(profileFormData);
-            const fresh = await fetchMyProfile(authUser!.id);
-            dispatch(updateProfileSuccess(fresh));
-            dispatch(setUserProfileData({ ...fresh }));
-            setAlertTitle('Успех!');
-            setAlertMessage('Профиль успешно обновлен.');
-            setAlertType('success');
-            openAlert();
-        } catch (err: unknown) {
-            // *** FIX: Rely on profileApi.ts to throw a standard Error object with the message ***
-            const msg = err instanceof Error ? err.message : 'Неизвестная ошибка обновления профиля';
-            dispatch(updateProfileFailure(msg));
-        }
-    };
-
-    const onPasswordFormSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-            setAlertTitle('Ошибка валидации');
-            setAlertMessage('Новый пароль и подтверждение не совпадают.');
-            setAlertType('error');
-            openAlert();
-            return;
-        }
-        if (passwordFormData.newPassword.length < 6) {
-            setAlertTitle('Ошибка валидации');
-            setAlertMessage('Пароль должен быть не менее 6 символов.');
-            setAlertType('error');
-            openAlert();
-            return;
-        }
-        dispatch(changePasswordPending());
-        try {
-            await changeMyPassword({ oldPassword: passwordFormData.oldPassword, newPassword: passwordFormData.newPassword });
-            dispatch(changePasswordSuccesss());
-        } catch (err: unknown) {
-            // *** FIX: Rely on profileApi.ts to throw a standard Error object with the message ***
-            const msg = err instanceof Error ? err.message : 'Неизвестная ошибка изменения пароля';
-            dispatch(changePasswordFailure(msg));
-        }
-    };
 
     if (isLoading) {
         return <div className="fixed inset-0 flex justify-center items-center"><Spinner /></div>;
@@ -238,7 +111,10 @@ const EditMyProfilePage: React.FC = () => {
             <div className="w-full max-w-4xl">
                 <div className="w-full p-6 bg-white rounded-lg shadow-md flex items-center justify-between mb-8">
                     <div className="flex items-center">
-                        <Avatar src={authUser?.avatarUrl || 'https://i.pravatar.cc/150?u=a042581f4e29026704d'} size="lg" />
+                        <Avatar
+                            src={currentProfileAvatarUrl || undefined}
+                            size="lg"
+                        />
                         <div className="ml-4">
                             <h2 className="text-xl font-semibold text-gray-800">{profile?.name} {profile?.surname}</h2>
                             <p className="text-sm text-gray-500">{profile?.email}</p>
@@ -248,100 +124,14 @@ const EditMyProfilePage: React.FC = () => {
 
                 <Card className="shadow-xl p-6 sm:p-8 w-full">
                     <CardBody>
-                        <form onSubmit={onProfileFormSubmit}>
-                            <h3 className="text-xl font-semibold text-gray-800 mb-6">Основные настройки</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                <Input
-                                    label="Имя"
-                                    name="name"
-                                    placeholder="Ваше имя"
-                                    variant="bordered"
-                                    value={profileFormData.name}
-                                    onChange={handleProfileInputChange}
-                                />
-                                <Input
-                                    label="Фамилия"
-                                    name="surname"
-                                    placeholder="Ваша фамилия"
-                                    variant="bordered"
-                                    value={profileFormData.surname}
-                                    onChange={handleProfileInputChange}
-                                />
-                                <Input
-                                    label="Email"
-                                    name="email"
-                                    type="email"
-                                    placeholder="Ваш email"
-                                    variant="bordered"
-                                    value={profileFormData.email}
-                                    onChange={handleProfileInputChange}
-                                />
-                                <Input
-                                    label="Telegram ID"
-                                    name="telegramId"
-                                    placeholder="@ваш_telegram_id"
-                                    variant="bordered"
-                                    value={profileFormData.telegramUsername || ''}
-                                    onChange={handleProfileInputChange}
-                                />
-                            </div>
-                            <div className="flex justify-end mt-6">
-                                <Button type="submit" color="primary" isLoading={isUpdatingProfile}>
-                                    Сохранить изменения
-                                </Button>
-                            </div>
-                        </form>
-
-                        <Divider className="my-8" />
-
-                        {/* --- Change Password Form --- */}
-                        <form onSubmit={onPasswordFormSubmit}>
-                            <h3 className="text-xl font-semibold text-gray-800 mb-6">Изменить пароль</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-1 gap-y-6">
-                                <Input
-                                    label="Текущий пароль"
-                                    name="oldPassword"
-                                    type="password"
-                                    placeholder="Введите текущий пароль"
-                                    variant="bordered"
-                                    value={passwordFormData.oldPassword}
-                                    onChange={handlePasswordInputChange}
-                                />
-                                <Input
-                                    label="Новый пароль"
-                                    name="newPassword"
-                                    type="password"
-                                    placeholder="Введите новый пароль"
-                                    variant="bordered"
-                                    value={passwordFormData.newPassword}
-                                    onChange={handlePasswordInputChange}
-                                />
-                                <Input
-                                    label="Подтвердите пароль"
-                                    name="confirmPassword"
-                                    type="password"
-                                    placeholder="Повторите новый пароль"
-                                    variant="bordered"
-                                    value={passwordFormData.confirmPassword}
-                                    onChange={handlePasswordInputChange}
-                                />
-                            </div>
-                            <div className="flex justify-end mt-6">
-                                <Button type="submit" color="primary" isLoading={isChangingPassword}>
-                                    Изменить пароль
-                                </Button>
-                            </div>
-                        </form>
+                        <AvatarManagementSection triggerReloadWithAlert={triggerReloadWithAlert} />
+                        <ProfileSettingsSection triggerReloadWithAlert={triggerReloadWithAlert} profile={profile} />
+                        <ChangePasswordSection openAlertDialog={triggerReloadWithAlert} />
                     </CardBody>
                 </Card>
             </div>
-            <AlertDialog
-                isOpen={isAlertOpen}
-                onOpenChange={onAlertOpenChange}
-                title={alertTitle}
-                message={alertMessage}
-                type={alertType}
-            />
+            <AlertDialog isOpen={isAlertOpen} onOpenChange={onAlertOpenChange} title={alertTitle} message={alertMessage}
+                         type={alertType}/>
         </div>
     );
 };

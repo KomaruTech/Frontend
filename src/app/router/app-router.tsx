@@ -2,8 +2,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginPage from '@pages/Login';
-import { PrivateRoute } from '@shared/ui/layout/PrivateRoute.tsx';
-import { AuthRedirectGuard } from '@shared/lib/hooks/useAuthRedirectGuard.tsx';
+import { PrivateRoute } from '@app/router/components/PrivateRoute.tsx';
+import { AuthRedirectGuard } from '@app/router/components/useAuthRedirectGuard.tsx';
 import HomePage from "@pages/Home";
 import EditMyProfilePage from "@pages/EditMyProfilePage/ui/EditMyProfilePage.tsx";
 

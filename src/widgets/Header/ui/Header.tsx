@@ -1,7 +1,8 @@
 import React from 'react';
 import CustomUser from "@widgets/Header/ui/CustomUser.tsx";
-import Search from "@widgets/Header/ui/Search.tsx";
+// import Search from "@widgets/Header/ui/Search.tsx";
 import Notification from "@widgets/Header/ui/Notification.tsx";
+import SearchEvents from "@features/search";
 
 
 export const Header: React.FC = () => {
@@ -12,7 +13,7 @@ export const Header: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4">
-                <Search/>
+                <SearchEvents/>
                 <Notification/>
                 <CustomUser/>
             </div>

@@ -1,9 +1,9 @@
 // src/widgets/WelcomeCard/ui/WelcomeCard.tsx
 import React from 'react';
 import { useSelector } from 'react-redux';
-import type { RootState } from '@app/store'; // Assuming @app/store defines RootState
+import type { RootState } from '@app/store';
 import { Image } from '@heroui/react';
-import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern.svg'; // Assuming this path is correct
+import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern.svg';
 
 interface WelcomeCardProps {
     userName?: string | null;

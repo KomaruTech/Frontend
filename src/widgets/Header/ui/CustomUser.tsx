@@ -7,28 +7,66 @@ import {
     User,
     Avatar,
 } from "@heroui/react";
-import {useDispatch, useSelector} from 'react-redux';
-import {useNavigate} from "react-router-dom"; // Import useNavigate
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from "react-router-dom";
 import { logout } from '@features/auth/model/authSlice.ts';
-import type {RootState} from "@app/store";
+import type { RootState } from "@app/store";
+import { useState, useEffect } from "react";
+
+import { fetchMyAvatar } from "@features/profile/api/profileApi.ts";
 
 export default function CustomUser() {
     const dispatch = useDispatch();
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate();
     const currentUser = useSelector((state: RootState) => state.auth.user);
+
+    // Локальное состояние для хранения временного URL аватара
+    const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
+
+    // useEffect для загрузки аватара при изменении пользователя или его аватара
+    useEffect(() => {
+        let objectUrl: string | null = null;
+
+        const loadAvatar = async () => {
+            // Загружаем, только если у пользователя есть ссылка на аватар
+            if (currentUser?.avatarUrl) {
+                try {
+                    const blob = await fetchMyAvatar(currentUser.avatarUrl);
+                    objectUrl = URL.createObjectURL(blob);
+                    setAvatarObjectUrl(objectUrl);
+                } catch (error) {
+                    console.error("Не удалось загрузить аватар для CustomUser:", error);
+                    setAvatarObjectUrl(null);
+                }
+            } else {
+                // Если у пользователя нет аватара, сбрасываем состояние
+                setAvatarObjectUrl(null);
+            }
+        };
+
+        loadAvatar();
+
+        // Функция очистки для предотвращения утечек памяти
+        return () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [currentUser?.avatarUrl]); // Зависимость от URL аватара в Redux
 
     const handleLogout = () => {
         dispatch(logout());
     };
 
-    // Handler for navigating to the profile edit page
     const handleEditProfile = () => {
         navigate("/profile/me/edit");
     };
 
-    const avatarSrc = currentUser?.avatarUrl || undefined;
     const userName = currentUser ? `${currentUser.name || ''} ${currentUser.surname || ''}`.trim() : "Гость";
     const userEmail = currentUser?.email || "";
+
+    // Используем наш локальный URL. Если его нет, `src` будет `undefined`, и компонент Avatar покажет fallback.
+    const finalAvatarSrc = avatarObjectUrl || undefined;
 
     return (
         <div className="flex items-center gap-4">
@@ -42,7 +80,7 @@ export default function CustomUser() {
                     <Avatar
                         as="button"
                         className="transition-transform"
-                        src={avatarSrc}
+                        src={finalAvatarSrc}
                     />
                 </DropdownTrigger>
 
@@ -52,24 +90,19 @@ export default function CustomUser() {
                     disabledKeys={["profile"]}
                     itemClasses={{
                         base: [
-                            "rounded-md",
-                            "text-default-500",
-                            "transition-opacity",
-                            "data-[hover=true]:text-foreground",
-                            "data-[hover=true]:bg-default-100",
-                            "dark:data-[hover=true]:bg-default-50",
-                            "data-[selectable=true]:focus:bg-default-50",
-                            "data-[pressed=true]:opacity-70",
-                            "data-[focus-visible=true]:ring-default-500",
+                            "rounded-md", "text-default-500", "transition-opacity",
+                            "data-[hover=true]:text-foreground", "data-[hover=true]:bg-default-100",
+                            "dark:data-[hover=true]:bg-default-50", "data-[selectable=true]:focus:bg-default-50",
+                            "data-[pressed=true]:opacity-70", "data-[focus-visible=true]:ring-default-500",
                         ],
                     }}
                 >
-                    <DropdownSection showDivider aria-label="Profile & Actions">
+                    <DropdownSection showDivider aria-label="Профиль и Действия">
                         <DropdownItem key="profile" isReadOnly className="h-14 gap-2 opacity-100">
                             <User
                                 avatarProps={{
                                     size: "sm",
-                                    src: avatarSrc,
+                                    src: finalAvatarSrc,
                                 }}
                                 classNames={{
                                     name: "text-default-600",
@@ -79,11 +112,11 @@ export default function CustomUser() {
                                 description={userEmail}
                             />
                         </DropdownItem>
-                        <DropdownItem key="edit-my-profile" onPress={handleEditProfile}> {/* Changed to onPress */}
+                        <DropdownItem key="edit-my-profile" onPress={handleEditProfile}>
                             Редактировать профиль
                         </DropdownItem>
                     </DropdownSection>
-                    <DropdownSection aria-label="Help & Feedback">
+                    <DropdownSection aria-label="Помощь и Обратная связь">
                         <DropdownItem key="logout" color="danger" onPress={handleLogout}>
                             Выйти
                         </DropdownItem>
