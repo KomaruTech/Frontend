@@ -20,12 +20,9 @@ const EventCard = () => {
   return (
     <div className="relative h-[590px] bg-gray-100">
       {/* Основной контент страницы */}
-      <div className="p-4">
-        {/* Здесь может быть другой контент */}
-      </div>
 
       {/* Блок в правом нижнем углу */}
-      <div className="absolute mb-[210px] right-4">
+      <div className="absolute mb-[210px] right-4 pb-8">
         <h1 className="text-xl mb-4">Приглашение На Мероприятие</h1>
         <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-6 rounded-lg shadow-lg w-[323px] max-w-md relative overflow-hidden">
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600 rounded-full opacity-50"></div>

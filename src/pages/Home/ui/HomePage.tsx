@@ -11,7 +11,7 @@ import Invitation_to_event from '@/widgets/Invitation_to_event/ui/invitation_to_
 const HomePage: React.FC = () => {
     return (
         <div className="flex bg-gray-100">
-            <main className="flex-1 p-8 max-w-[1700px] mx-auto w-full">
+            <main className="flex-1 p-8 max-w-[1700px] mx-auto w-full bg-white">
                 <div className="mb-8">
                     <h1 className="text-3xl font-semibold text-gray-800">Главная</h1>
                 </div>
@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
                     <div className="w-full lg:w-2/3 order-2 lg:order-1 ml-[50px]">
                         <WelcomeCard />
                     </div>
-                    <div>
+                    <div className="py-2.5">
                       <Main_menu />
                     </div>
                 </div>

@@ -9,7 +9,7 @@ const menuItems = [
 
 function SidebarMenu() {
   return (
-    <div className="bg-[#004e9e] text-white rounded-2xl w-[200px] h-fit py-3 px-3 space-y-2 shadow-md">
+    <div className="bg-[#004e9e] text-white rounded-2xl w-[200px] h-[150px] py-4 px-3 space-y-7 shadow-md">
       {menuItems.map((item) => (
         <NavLink
           key={item.name}
