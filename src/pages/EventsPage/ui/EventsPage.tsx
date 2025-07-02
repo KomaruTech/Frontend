@@ -3,8 +3,9 @@ import OfferEventCar from "@/pages/Home/ui/NewIvent";
 import Main_menu from "@widgets/Header/ui/Main_menu";
 import { Header } from "@widgets/Header";
 import { CustomCalendar } from "@widgets/CustomCalendar";
-import { Calendar, Clock, X } from "lucide-react";
 import { addToast } from "@heroui/react";
+import PastEventsList from "@/features/events/PastEventsList";
+import UpcomingEventsList from "@/features/events/UpcomingEventsList";
 
 interface Event {
   id: number;
@@ -19,6 +20,7 @@ interface Event {
   keywords?: string[];
 }
 
+// Прошедшие события
 const pastEvents: Event[] = [
   {
     id: 1,
@@ -70,6 +72,7 @@ const pastEvents: Event[] = [
   },
 ];
 
+// Предстоящие события
 const upcomingEvents: Event[] = [
   {
     id: 2,
@@ -124,7 +127,6 @@ const upcomingEvents: Event[] = [
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState<"past" | "upcoming">("past");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const events = activeTab === "past" ? pastEvents : upcomingEvents;
 
   const handleEnroll = () => {
     addToast({
@@ -132,7 +134,7 @@ export default function EventsPage() {
       description: "Вы записались на мероприятие",
       color: "success",
     });
-    setSelectedEvent(null); // закрытие модального окна
+    setSelectedEvent(null);
   };
 
   return (
@@ -167,29 +169,20 @@ export default function EventsPage() {
         </div>
 
         {/* Список событий */}
-        <div className="flex flex-col gap-4 max-w-3xl">
-          {events.map((event) => (
-            <div
-              key={event.id}
-              onClick={() => setSelectedEvent(event)}
-              className="cursor-pointer border rounded-xl border-blue-500 p-4 shadow-sm hover:shadow-md transition"
-            >
-              <h2 className="text-lg font-semibold">{event.title}</h2>
-              <p className="text-sm text-gray-700">{event.subtitle}</p>
-              <p className="text-sm text-gray-500">{event.description}</p>
-              <div className="flex gap-4 mt-2 text-sm text-gray-600 items-center">
-                <span className="flex items-center gap-1">
-                  <Calendar size={16} />
-                  {event.date}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock size={16} />
-                  {event.time}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        {activeTab === "past" ? (
+          <PastEventsList
+            events={pastEvents}
+            selectedEvent={selectedEvent}
+            onSelect={setSelectedEvent}
+          />
+        ) : (
+          <UpcomingEventsList
+            events={upcomingEvents}
+            selectedEvent={selectedEvent}
+            onSelect={setSelectedEvent}
+            onEnroll={handleEnroll}
+          />
+        )}
       </div>
 
       {/* Правая панель */}
@@ -200,54 +193,6 @@ export default function EventsPage() {
           <CustomCalendar />
         </div>
       </div>
-
-      {/* Модальное окно */}
-      {selectedEvent && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="bg-white w-[90%] max-w-xl rounded-xl p-6 shadow-xl animate-fade-in relative">
-            {/* Крестик */}
-            <button
-              onClick={() => setSelectedEvent(null)}
-              className="absolute top-4 right-4 text-gray-600 hover:text-black"
-            >
-              <X size={20} />
-            </button>
-
-            <h2 className="text-xl font-semibold mb-2">{selectedEvent.title}</h2>
-            <p className="text-gray-700 mb-1">Тип: {selectedEvent.type}</p>
-            <p className="text-gray-700 mb-1">Описание: {selectedEvent.description}</p>
-            <p className="text-gray-700 mb-1">Дата: {selectedEvent.date}</p>
-            <p className="text-gray-700 mb-1">Время: {selectedEvent.time}</p>
-            <p className="text-gray-700 mb-1">Адрес: {selectedEvent.address}</p>
-            <p className="text-gray-700 mb-4">Организатор: {selectedEvent.creator}</p>
-
-            {selectedEvent.keywords && (
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-1">Ключевые слова:</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedEvent.keywords.map((kw, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full"
-                    >
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === "upcoming" && (
-              <button
-                className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
-                onClick={handleEnroll}
-              >
-                Записаться на мероприятие
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
