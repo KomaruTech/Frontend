@@ -19,7 +19,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({ userName }) => {
       bg-white
       shadow-lg rounded-xl overflow-hidden
       h-[160px]
-      flex flex-row items-stretch
+      flex flex-row items-stretch mb-[90px] ml-[60px]
     ">
             <div className="flex flex-col justify-center flex-grow basis-2/3 p-6">
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-1">

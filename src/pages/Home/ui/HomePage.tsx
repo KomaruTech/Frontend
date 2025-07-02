@@ -8,6 +8,7 @@ import {Header} from "@widgets/Header";
 import OfferEventCar from '@features/post-event/ui/NewIvent.tsx';
 import SidebarMenu from '@widgets/Header/ui/Main_menu';
 import InvitationToEvent from '@widgets/Invitation_to_event/ui/InvitationToEvent.tsx'
+import StatisticsCard from '@/features/statistics';
 
 import {
     fetchProfilePending,
@@ -57,6 +58,7 @@ const HomePage: React.FC = () => {
                     </div>
                     <div className="w-full lg:w-2/3 order-2 lg:order-1">
                         <WelcomeCard/>
+                        <StatisticsCard />
                     </div>
                     <SidebarMenu/>
                 </div>
