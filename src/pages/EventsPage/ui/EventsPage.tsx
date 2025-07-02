@@ -1,11 +1,11 @@
 import { useState } from "react";
-import OfferEventCar from "@/pages/Home/ui/NewIvent";
-import Main_menu from "@widgets/Header/ui/Main_menu";
+import OfferEventCar from "@features/post-event/ui/NewIvent.tsx";
+import SidebarMenu from "@widgets/Header/ui/Main_menu";
 import { Header } from "@widgets/Header";
-import { CustomCalendar } from "@widgets/CustomCalendar";
+import { CustomCalendar } from "@features/calendary";
 import { addToast } from "@heroui/react";
-import PastEventsList from "@/features/events/PastEventsList";
-import UpcomingEventsList from "@/features/events/UpcomingEventsList";
+import PastEventsList from "@features/events/ui/PastEventsList.tsx";
+import UpcomingEventsList from "@features/events/ui/UpcomingEventsList.tsx";
 
 interface Event {
   id: number;
@@ -20,7 +20,6 @@ interface Event {
   keywords?: string[];
 }
 
-// Прошедшие события
 const pastEvents: Event[] = [
   {
     id: 1,
@@ -72,7 +71,6 @@ const pastEvents: Event[] = [
   },
 ];
 
-// Предстоящие события
 const upcomingEvents: Event[] = [
   {
     id: 2,
@@ -138,10 +136,10 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-20 px-8 py-14 relative">
+    <div className="flex bg-gray-100 flex-col lg:flex-row gap-20 px-8 py-14 min-h-screen relative">
       {/* Левая панель */}
       
-      <Main_menu />
+      <SidebarMenu />
       {/* Основной контент */}
       <div className="flex flex-1 flex-col gap-6">
         {/* Переключатель вкладок */}
