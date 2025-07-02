@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_LOCAL_HOST || 'http://localhost:5124/api/v1',
+    baseURL: import.meta.env.VITE_API_URL || 'http://83.217.223.201:5124/api/v1',
 });
 
 api.interceptors.request.use((config) => {
