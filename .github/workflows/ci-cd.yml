@@ -81,6 +81,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_URL=http://83.217.223.201:5124/api/v1
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -152,6 +154,7 @@ jobs:
               --network app-network \
               -p 80:80 \
               -e NODE_ENV=production \
+              -e VITE_API_URL=http://83.217.223.201:5124/api/v1 \
               --restart unless-stopped \
               ghcr.io/komarutech/frontend:devops
             
