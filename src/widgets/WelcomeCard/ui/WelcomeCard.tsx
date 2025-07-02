@@ -3,7 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@app/store';
 import { Image } from '@heroui/react';
-import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern.svg';
+import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern2.svg';
 
 interface WelcomeCardProps {
     userName?: string | null;
