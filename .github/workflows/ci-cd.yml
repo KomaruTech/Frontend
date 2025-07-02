@@ -103,10 +103,10 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u ${{ secrets.GH_USER }} --password-stdin
-            docker pull ghcr.io/komarutech/frontend:frontend
+            docker pull ghcr.io/komarutech/frontend:devops
             docker stop frontend || true
             docker rm frontend || true
-            docker run -d --name frontend -p 80:80 ghcr.io/komarutech/frontend:frontend
+            docker run -d --name frontend -p 80:80 ghcr.io/komarutech/frontend:devops
 
   security:
     runs-on: ubuntu-latest
