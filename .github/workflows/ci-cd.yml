@@ -132,10 +132,31 @@ jobs:
                   - ASPNETCORE_URLS=http://+:5124
             EOF
             
-            docker compose pull
-            docker compose up -d
+            docker pull ghcr.io/komarutech/frontend:devops
+            docker pull ghcr.io/komarutech/backend:devops
             
-            docker compose ps
+            docker stop template_backend || true
+            docker rm template_backend || true
+            docker run -d --name template_backend \
+              --network app-network \
+              -p 5124:5124 \
+              -e "ConnectionStrings__DefaultConnection=Server=template_postgres;Port=5432;Database=server;UserId=postgres;Password=postgres;" \
+              -e ASPNETCORE_ENVIRONMENT=Production \
+              -e ASPNETCORE_URLS=http://+:5124 \
+              --restart unless-stopped \
+              ghcr.io/komarutech/backend:devops
+            
+            docker stop template_frontend || true
+            docker rm template_frontend || true
+            docker run -d --name template_frontend \
+              --network app-network \
+              -p 80:80 \
+              -e NODE_ENV=production \
+              --restart unless-stopped \
+              ghcr.io/komarutech/frontend:devops
+            
+            # Показываем статус
+            docker ps
 
   security:
     runs-on: ubuntu-latest
@@ -144,7 +165,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run security audit
-        run: npm audit --audit-level=moderate 
+        run: npm audit --audit-level=moderate
 
       # - name: Scan Docker image for vulnerabilities
       #   if: github.event_name == 'push'
