@@ -3,7 +3,6 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@app/store';
 import { Image } from '@heroui/react';
-import WelcomeCardPattern from '@shared/assets/images/WelcomeCardPattern.svg';
 
 interface WelcomeCardProps {
     userName?: string | null;
@@ -31,7 +30,7 @@ export const WelcomeCard: React.FC<WelcomeCardProps> = ({ userName }) => {
             </div>
             <div className="relative flex-shrink-0 basis-1/3 hidden md:block">
                 <Image
-                    src={WelcomeCardPattern}
+                    src="/images/WelcomeCardPattern.svg"
                     alt="Декоративный узор"
                     className="
                         absolute top-0 right-0

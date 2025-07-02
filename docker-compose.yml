@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://backend:5124
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ../Backend
+      dockerfile: Dockerfile
+    container_name: template_api
+    depends_on:
+      - database
+    ports:
+      - "5124:5124"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=server;Username=postgres;Password=postgres;Timeout=300
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - app-network
+
+  database:
+    image: postgres:17
+    container_name: template_postgres
+    environment:
+      POSTGRES_DB: server
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge 

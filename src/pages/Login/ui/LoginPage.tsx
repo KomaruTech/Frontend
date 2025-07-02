@@ -8,7 +8,7 @@ const LoginPage = () => (
             <div className="sm:w-1/2 w-full flex flex-col justify-center items-start p-6 sm:p-[6%]">
                 <div className="flex items-center mb-6">
                     <img
-                        src="/src/shared/assets/images/Logo.svg" // Путь к статическому ресурсу
+                        src="/images/Logo.svg"
                         alt="Логотип"
                         className="w-10 h-10 mr-4"
                     />
@@ -27,7 +27,7 @@ const LoginPage = () => (
             </div>
             <div className="sm:w-1/2 w-full h-60 sm:h-auto relative overflow-hidden">
                 <img
-                    src="/src/shared/assets/images/LoginPage/BG-image.png" // Путь к статическому ресурсу
+                    src="/images/LoginPage/BG-image.png"
                     alt="Background"
                     className="w-full h-full object-cover object-center"
                 />
