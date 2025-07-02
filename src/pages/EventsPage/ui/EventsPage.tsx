@@ -6,6 +6,7 @@ import { CustomCalendar } from "@features/calendary";
 import { addToast } from "@heroui/react";
 import PastEventsList from "@features/events/ui/PastEventsList.tsx";
 import UpcomingEventsList from "@features/events/ui/UpcomingEventsList.tsx";
+import RequestsSection from "@features/applications/ui/application"
 
 interface Event {
   id: number;
@@ -181,6 +182,10 @@ export default function EventsPage() {
             onEnroll={handleEnroll}
           />
         )}
+      </div>
+      {/* Заявки на мероприятие */}
+      <div>
+        <RequestsSection />
       </div>
 
       {/* Правая панель */}
