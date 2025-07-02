@@ -6,7 +6,7 @@ import { CustomCalendar } from "@features/calendary";
 import { addToast } from "@heroui/react";
 import PastEventsList from "@features/events/ui/PastEventsList.tsx";
 import UpcomingEventsList from "@features/events/ui/UpcomingEventsList.tsx";
-import RequestsSection from "@features/applications/ui/application"
+import RequestsSection from "@features/applications/ui/application";
 
 interface Event {
   id: number;
@@ -137,65 +137,72 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="flex bg-gray-100 flex-col lg:flex-row gap-20 px-8 py-14 min-h-screen relative">
-      {/* Левая панель */}
-      
-      <SidebarMenu />
-      {/* Основной контент */}
-      <div className="flex flex-1 flex-col gap-6">
-        {/* Переключатель вкладок */}
-        <div className="flex bg-gray-200 rounded-full p-1 w-fit">
-          <button
-            onClick={() => setActiveTab("past")}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
-              activeTab === "past"
-                ? "bg-gradient-to-r from-blue-600 to-blue-300 text-white"
-                : "text-gray-600 hover:text-black"
-            }`}
-          >
-            Твои мероприятия
-          </button>
-          <button
-            onClick={() => setActiveTab("upcoming")}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
-              activeTab === "upcoming"
-                ? "bg-gradient-to-r from-blue-600 to-blue-300 text-white"
-                : "text-gray-600 hover:text-black"
-            }`}
-          >
-            Предстоящие
-          </button>
-        </div>
+    <div className="flex bg-gray-100 min-h-screen">
+      <main className="flex-1 p-8 mx-auto w-full max-w-[1920px] min-h-screen">
+        <div className="flex flex-col lg:flex-row gap-6 min-h-screen">
+          {/* Sidebar слева */}
+          <div className="order-1 lg:order-1">
+            <SidebarMenu />
+          </div>
 
-        {/* Список событий */}
-        {activeTab === "past" ? (
-          <PastEventsList
-            events={pastEvents}
-            selectedEvent={selectedEvent}
-            onSelect={setSelectedEvent}
-          />
-        ) : (
-          <UpcomingEventsList
-            events={upcomingEvents}
-            selectedEvent={selectedEvent}
-            onSelect={setSelectedEvent}
-            onEnroll={handleEnroll}
-          />
-        )}
-      </div>
-      {/* Заявки на мероприятие */}
-      <div>
-        <RequestsSection />
-      </div>
+          {/* Центральная часть */}
+          <div className="flex-1 flex flex-col gap-6 order-2 lg:order-2">
+            {/* Верхняя панель: табы и кнопка заявок */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex bg-gray-200 rounded-full p-1 w-fit">
+                <button
+                  onClick={() => setActiveTab("past")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                    activeTab === "past"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-300 text-white"
+                      : "text-gray-600 hover:text-black"
+                  }`}
+                >
+                  Твои мероприятия
+                </button>
+                <button
+                  onClick={() => setActiveTab("upcoming")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                    activeTab === "upcoming"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-300 text-white"
+                      : "text-gray-600 hover:text-black"
+                  }`}
+                >
+                  Предстоящие
+                </button>
+              </div>
+              <div>
+                <RequestsSection />
+              </div>
+            </div>
 
-      {/* Правая панель */}
-      <div className="w-full lg:w-1/3 flex flex-col gap-4 order-1 lg:order-2 items-end max-h-[600px]">
-        <Header />
-        <div className="flex flex-col gap-4 h-full min-w-[320px] mr-[19px]">
-          <OfferEventCar />
-          <CustomCalendar />
+            {/* Список мероприятий */}
+            {activeTab === "past" ? (
+              <PastEventsList
+                events={pastEvents}
+                selectedEvent={selectedEvent}
+                onSelect={setSelectedEvent}
+              />
+            ) : (
+              <UpcomingEventsList
+                events={upcomingEvents}
+                selectedEvent={selectedEvent}
+                onSelect={setSelectedEvent}
+                onEnroll={handleEnroll}
+              />
+            )}
+          </div>
+
+          {/* Правая колонка */}
+          <div className="w-full lg:w-1/3 flex flex-col gap-4 order-3 lg:order-3 items-end max-h-[600px]">
+            <Header />
+            <div className="flex flex-col gap-4 h-full min-w-[320px] mr-[19px] ">
+              <OfferEventCar />
+              <CustomCalendar />
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
