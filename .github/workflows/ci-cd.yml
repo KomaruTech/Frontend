@@ -126,10 +126,9 @@ jobs:
                 image: ghcr.io/komarutech/backend:devops
                 restart: always
                 ports:
-                  - "5124:5124"
+                  - "5124:38231"
                 environment:
                   - ASPNETCORE_ENVIRONMENT=Production
-                  - ASPNETCORE_URLS=http://+:5124
             EOF
             
             docker pull ghcr.io/komarutech/frontend:devops
@@ -139,10 +138,9 @@ jobs:
             docker rm template_backend || true
             docker run -d --name template_backend \
               --network app-network \
-              -p 5124:5124 \
+              -p 5124:38231 \
               -e "ConnectionStrings__DefaultConnection=Server=template_postgres;Port=5432;Database=server;UserId=postgres;Password=postgres;" \
               -e ASPNETCORE_ENVIRONMENT=Production \
-              -e ASPNETCORE_URLS=http://+:5124 \
               --restart unless-stopped \
               ghcr.io/komarutech/backend:devops
             
