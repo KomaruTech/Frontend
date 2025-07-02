@@ -29,9 +29,10 @@ export default function SearchEvents() {
             };
             const results = await searchEvents(payload);
             setSearchResults(results);
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const error = err as { message?: string };
             console.error("Error searching events:", err);
-            setError(err.message || 'Произошла ошибка при поиске.');
+            setError(error.message || '\u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u0438 \u043f\u043e\u0438\u0441\u043a\u0435.');
             setSearchResults([]);
         } finally {
             setIsLoading(false);

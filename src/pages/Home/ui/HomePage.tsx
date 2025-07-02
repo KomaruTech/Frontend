@@ -34,7 +34,7 @@ const HomePage: React.FC = () => {
                     console.error("Ошибка при загрузке профиля на главной странице:", msg);
                 });
         }
-    }, [dispatch, authUser?.id, profileLoading]);
+    }, [dispatch, authUser, authUser?.id, profileLoading]);
 
     return (
         <div className="flex min-h-screen bg-gray-100">

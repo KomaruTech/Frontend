@@ -47,7 +47,7 @@ export default function OfferEventCard() {
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setSearchResults(results);
-  }, [searchQuery]);
+  }, [searchQuery, mockUsers]);
 
   const handleChange = (
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

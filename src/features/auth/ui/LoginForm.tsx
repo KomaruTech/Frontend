@@ -29,9 +29,10 @@ const LoginForm = () => {
                     console.log('Login successful:', user, token);
                     dispatch(loginSuccess({ user, token }));
                     navigate('/');
-                } catch (err: any) {
+                } catch (err: unknown) {
+                    const error = err as { response?: { data?: { title?: string } } };
                     console.error('Login error:', err);
-                    setError(err.response?.data?.title || 'Ошибка авторизации');
+                    setError(error.response?.data?.title || '\u041e\u0448\u0438\u0431\u043a\u0430 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438');
                 } finally {
                     setSubmitting(false);
                 }
