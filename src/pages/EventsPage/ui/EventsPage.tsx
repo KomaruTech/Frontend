@@ -23,7 +23,6 @@ export default function EventsPage() {
             </>
           }
       >
-        {/* Центральная колонка */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex bg-gray-200 rounded-full p-1 w-fit">
             <button

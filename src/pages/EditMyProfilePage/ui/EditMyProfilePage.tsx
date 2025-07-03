@@ -18,10 +18,12 @@ import { ProfileSettingsSection } from "@features/profile/ui/ProfileSettingsSect
 import { ChangePasswordSection } from "@features/profile/ui/ChangePasswordSection";
 import { AlertDialog } from "@shared/ui/AlertDialog";
 
+import { SwitchNotificationSection } from "@features/profile/ui/SwicthNotificationSection"
+
 const EditMyProfilePage: React.FC = () => {
     const dispatch = useDispatch();
-    const navigate = useNavigate(); // Для изменения URL-параметров
-    const [searchParams, setSearchParams] = useSearchParams(); // Для работы с URL-параметрами
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const authUser = useSelector((state: RootState) => state.auth.user);
     const { profile, isLoading, error } = useSelector((state: RootState) => state.profile);
@@ -32,6 +34,7 @@ const EditMyProfilePage: React.FC = () => {
     const [alertType, setAlertType] = useState<'success' | 'error'>('success');
 
     const [currentProfileAvatarUrl, setCurrentProfileAvatarUrl] = useState<string | null>(null);
+
     const handleOpenAlertDialog = useCallback((title: string, message: string, type: 'success' | 'error') => {
         setAlertTitle(title);
         setAlertMessage(message);
@@ -46,6 +49,7 @@ const EditMyProfilePage: React.FC = () => {
         newParams.set('alertType', type);
         navigate(`?${newParams.toString()}`, { replace: true });
     }, [navigate]);
+
     useEffect(() => {
         let objectUrl: string | null = null;
         const loadAvatar = async () => {
@@ -69,6 +73,7 @@ const EditMyProfilePage: React.FC = () => {
             }
         };
     }, [authUser?.avatarUrl]);
+
     useEffect(() => {
         if (authUser?.id && !profile && !isLoading && !error) {
             dispatch(fetchProfilePending());
@@ -100,7 +105,6 @@ const EditMyProfilePage: React.FC = () => {
         }
     }, [searchParams, handleOpenAlertDialog, setSearchParams]);
 
-
     if (isLoading) {
         return <div className="fixed inset-0 flex justify-center items-center"><Spinner /></div>;
     }
@@ -125,12 +129,18 @@ const EditMyProfilePage: React.FC = () => {
                     <CardBody>
                         <AvatarManagementSection triggerReloadWithAlert={triggerReloadWithAlert} />
                         <ProfileSettingsSection triggerReloadWithAlert={triggerReloadWithAlert} profile={profile} />
+                        <SwitchNotificationSection triggerReloadWithAlert={triggerReloadWithAlert} />
                         <ChangePasswordSection openAlertDialog={triggerReloadWithAlert} />
                     </CardBody>
                 </Card>
             </div>
-            <AlertDialog isOpen={isAlertOpen} onOpenChange={onAlertOpenChange} title={alertTitle} message={alertMessage}
-                         type={alertType}/>
+            <AlertDialog
+                isOpen={isAlertOpen}
+                onOpenChange={onAlertOpenChange}
+                title={alertTitle}
+                message={alertMessage}
+                type={alertType}
+            />
         </div>
     );
 };
