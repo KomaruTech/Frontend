@@ -30,7 +30,6 @@ const eventTypeTranslations: Record<string, string> = {
   general: "Общий",
 };
 
-// Форматирование начала/окончания
 const formatDateTime = (
     isoStart: string,
     isoEnd: string
@@ -46,7 +45,6 @@ const formatDateTime = (
       : { date, time, endTime };
 };
 
-// Трансформация ApiEvent в локальный тип
 const transformApiEvent = (apiEvent: ApiEvent): Event => {
   const { date, endDate, time, endTime } = formatDateTime(apiEvent.timeStart, apiEvent.timeEnd);
   return {
@@ -74,7 +72,6 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
   const [orgLoading, setOrgLoading] = useState(false);
   const [orgError, setOrgError] = useState<string | null>(null);
 
-  // Загрузка списка событий
   useEffect(() => {
     const controller = new AbortController();
     fetchEvents({ signal: controller.signal })
@@ -83,14 +80,11 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
         .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, []);
-
-  // Открытие/закрытие модалки при выборе события
   useEffect(() => {
     if (selectedEvent) onOpen();
     else onClose();
   }, [selectedEvent, onOpen, onClose]);
 
-  // Загрузка данных организатора при открытии модалки
   useEffect(() => {
     if (!selectedEvent?.creator) return;
     const controller = new AbortController();
@@ -110,7 +104,7 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
 
   if (loading) return <Spinner size="lg" label="Загрузка мероприятий..." />;
   if (error) return <div className="text-red-500 text-center py-8">Ошибка: {error}</div>;
-  if (events.length === 0) return <div className="text-gray-600 text-center py-8">Мероприятий не найдено.</div>;
+  if (events.length === 0) return <div className="text-gray-600 text-center py-8">Мероприятия не найдены.</div>;
 
   return (
       <>
