@@ -60,7 +60,7 @@ export default function RequestsSection() {
       {/* Кнопка */}
       <button
         onClick={() => setIsVisible(!isVisible)}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg mt-[1px]"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg"
       >
         Заявки на мероприятия
       </button>
