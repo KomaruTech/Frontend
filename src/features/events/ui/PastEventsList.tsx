@@ -145,25 +145,34 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
             <ModalBody className="overflow-hidden whitespace-pre-wrap break-words">
               {selectedEvent && (
                   <div className="space-y-2 text-gray-700">
-                    <p className="break-words"><strong>Тип:</strong> {selectedEvent.type ? (eventTypeTranslations[selectedEvent.type.toLowerCase()] || selectedEvent.type) : "Не указан"}</p>
-                    <p className="break-words"><strong>Описание:</strong> {selectedEvent.description || "Нет описания"}</p>
+                    <p className="break-words">
+                      <strong>Тип:</strong> {selectedEvent.type ? (eventTypeTranslations[selectedEvent.type.toLowerCase()] || selectedEvent.type) : "Не указан"}
+                    </p>
+                    <p className="break-words">
+                      <strong>Описание:</strong> {selectedEvent.description || "Нет описания"}
+                    </p>
                     <p className="break-words">
                       <strong>Дата:</strong> {selectedEvent.date}{selectedEvent.endDate ? ` – ${selectedEvent.endDate}` : ''}
                     </p>
-                    <p className="break-words"><strong>Время:</strong> {selectedEvent.time} – {selectedEvent.endTime}</p>
-                    <p className="break-words"><strong>Адрес:</strong> {selectedEvent.address || "Не указан"}</p>
                     <p className="break-words">
+                      <strong>Время:</strong> {selectedEvent.time} – {selectedEvent.endTime}
+                    </p>
+                    <p className="break-words">
+                      <strong>Адрес:</strong> {selectedEvent.address || "Не указан"}
+                    </p>
+                    {/* Здесь заменяем <p> на <div> */}
+                    <div className="break-words">
                       <strong>Организатор:</strong>{' '}
                       {orgLoading ? <Spinner size="sm" /> : orgError ? `Ошибка: ${orgError}` : organizer ? `${organizer.name} ${organizer.surname}` : selectedEvent.creator}
-                    </p>
+                    </div>
                     {selectedEvent.keywords?.length && (
                         <div>
                           <p className="font-medium text-gray-700 break-words">Ключевые слова:</p>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {selectedEvent.keywords!.map((kw, i) => (
                                 <span key={i} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
-                          {kw}
-                        </span>
+                {kw}
+              </span>
                             ))}
                           </div>
                         </div>
