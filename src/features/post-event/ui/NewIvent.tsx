@@ -1,232 +1,286 @@
-import React, { useState, useEffect } from "react";
-import { Plus, X, Search, User } from "lucide-react";
-import {DateRangePicker, type RangeValue} from "@heroui/react";
-import { parseZonedDateTime } from "@internationalized/date";
-import { type ZonedDateTime } from "@internationalized/date";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+  Spinner,
+  Chip,
+  addToast,
+} from "@heroui/react";
+import { Plus } from "lucide-react";
+import {
+  postEventSuggestion,
+  searchUsers,
+  searchTeams,
+  type UserSearchResponse,
+  type TeamSearchResponse,
+} from "../api/postEventApi"; // поправлен путь
 
-interface User {
-  id: string;
-  name: string;
-  avatar?: string;
+function toLocalDateTimeInputValue(date: Date) {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-interface Team {
-  id: string;
-  name: string;
-  avatar?: string;
+export function CustomDateRangePicker({
+                                        value,
+                                        onChange,
+                                        label,
+                                      }: {
+  value: { start: string; end: string };
+  onChange: (value: { start: string; end: string }) => void;
+  label?: string;
+}) {
+  const [start, setStart] = useState(
+      value.start || toLocalDateTimeInputValue(new Date())
+  );
+  const [end, setEnd] = useState(
+      value.end || toLocalDateTimeInputValue(new Date())
+  );
+
+  useEffect(() => {
+    setStart(value.start || toLocalDateTimeInputValue(new Date()));
+    setEnd(value.end || toLocalDateTimeInputValue(new Date()));
+  }, [value]);
+
+  const onStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newStart = e.target.value;
+    setStart(newStart);
+    if (newStart > end) {
+      setEnd(newStart);
+      onChange({ start: newStart, end: newStart });
+    } else {
+      onChange({ start: newStart, end });
+    }
+  };
+
+  const onEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnd = e.target.value;
+    setEnd(newEnd);
+    if (newEnd < start) {
+      setStart(newEnd);
+      onChange({ start: newEnd, end: newEnd });
+    } else {
+      onChange({ start, end: newEnd });
+    }
+  };
+
+  return (
+      <div className="flex flex-col gap-2">
+        {label && <label className="font-semibold">{label}</label>}
+        <div className="flex gap-4 items-center">
+          <div className="flex flex-col">
+            <label className="text-sm">Начало</label>
+            <input
+                type="datetime-local"
+                value={start}
+                onChange={onStartChange}
+                className="p-2 border rounded"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm">Конец</label>
+            <input
+                type="datetime-local"
+                value={end}
+                onChange={onEndChange}
+                className="p-2 border rounded"
+            />
+          </div>
+        </div>
+      </div>
+  );
 }
 
 export default function OfferEventCard() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    type: "",
-    dateRange: { start: null as string | null, end: null as string | null },
-    address: "",
-    participants: [] as User[],
-    teams: [] as Team[],
-    keywords: [] as string[],
-  });
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [showResults, setShowResults] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState<"general" | "group" | "personal">(
+      "general"
+  );
 
-  const [teamSearchQuery, setTeamSearchQuery] = useState("");
-  const [teamSearchResults, setTeamSearchResults] = useState<Team[]>([]);
-  const [showTeamResults, setShowTeamResults] = useState(false);
-
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
 
-  const mockUsers: User[] = [
-    { id: "1", name: "Иван Иванов", avatar: "https://i.pravatar.cc/150?img=1" },
-    { id: "2", name: "Петр Петров", avatar: "https://i.pravatar.cc/150?img=2" },
-    { id: "3", name: "Мария Сидорова", avatar: "https://i.pravatar.cc/150?img=3" },
-    { id: "4", name: "Анна Кузнецова", avatar: "https://i.pravatar.cc/150?img=4" },
-    { id: "5", name: "Сергей Смирнов", avatar: "https://i.pravatar.cc/150?img=5" },
-  ];
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [teams, setTeams] = useState<string[]>([]);
 
-  const mockTeams: Team[] = [
-    { id: "t1", name: "Команда Альфа", avatar: "https://i.pravatar.cc/150?img=6" },
-    { id: "t2", name: "Команда Браво", avatar: "https://i.pravatar.cc/150?img=7" },
-    { id: "t3", name: "Команда Чарли", avatar: "https://i.pravatar.cc/150?img=8" },
-  ];
+  const [participantQuery, setParticipantQuery] = useState("");
+  const [teamQuery, setTeamQuery] = useState("");
+
+  const [debouncedParticipantQuery, setDebouncedParticipantQuery] =
+      useState("");
+  const [debouncedTeamQuery, setDebouncedTeamQuery] = useState("");
+
+  const participantTimer = useRef<NodeJS.Timeout | null>(null);
+  const teamTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const [foundUsers, setFoundUsers] = useState<UserSearchResponse[]>([]);
+  const [foundTeams, setFoundTeams] = useState<TeamSearchResponse[]>([]);
+
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+
+  const initialDateTime = toLocalDateTimeInputValue(new Date());
+  const [range, setRange] = useState<{ start: string; end: string }>({
+    start: initialDateTime,
+    end: initialDateTime,
+  });
+
+  const onParticipantQueryChange = (value: string) => {
+    setParticipantQuery(value);
+    if (participantTimer.current) clearTimeout(participantTimer.current);
+    participantTimer.current = setTimeout(() => {
+      setDebouncedParticipantQuery(value);
+    }, 400);
+  };
+
+  const onTeamQueryChange = (value: string) => {
+    setTeamQuery(value);
+    if (teamTimer.current) clearTimeout(teamTimer.current);
+    teamTimer.current = setTimeout(() => {
+      setDebouncedTeamQuery(value);
+    }, 400);
+  };
 
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
-
-    const results = mockUsers.filter((user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setSearchResults(results);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (teamSearchQuery.trim() === "") {
-      setTeamSearchResults([]);
-      return;
-    }
-
-    const results = mockTeams.filter((team) =>
-        team.name.toLowerCase().includes(teamSearchQuery.toLowerCase())
-    );
-    setTeamSearchResults(results);
-  }, [teamSearchQuery]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
+    if (type === "personal" && debouncedParticipantQuery.length >= 2) {
+      setLoadingUsers(true);
+      searchUsers(debouncedParticipantQuery)
+          .then((res) => {
+            if (Array.isArray(res)) {
+              setFoundUsers(res);
+            } else if (res && Array.isArray((res as any).data)) {
+              setFoundUsers((res as any).data);
+            } else {
+              setFoundUsers([]);
+              console.warn("Неверный формат ответа searchUsers:", res);
+            }
+          })
+          .catch(() => {
+            setFoundUsers([]);
+          })
+          .finally(() => setLoadingUsers(false));
     } else {
-      document.body.style.overflow = "";
+      setFoundUsers([]);
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  }, [debouncedParticipantQuery, type]);
 
-  const handleChange = (
-      e: React.ChangeEvent<
-          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-      >
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const addParticipant = (user: User) => {
-    if (!form.participants.some((p) => p.id === user.id)) {
-      setForm({
-        ...form,
-        participants: [...form.participants, user],
-      });
+  useEffect(() => {
+    if (type === "group" && debouncedTeamQuery.length >= 2) {
+      setLoadingTeams(true);
+      searchTeams(debouncedTeamQuery)
+          .then((res) => {
+            if (Array.isArray(res)) {
+              setFoundTeams(res);
+            } else if (res && Array.isArray((res as any).data)) {
+              setFoundTeams((res as any).data);
+            } else {
+              setFoundTeams([]);
+              console.warn("Неверный формат ответа searchTeams:", res);
+            }
+          })
+          .catch(() => {
+            setFoundTeams([]);
+          })
+          .finally(() => setLoadingTeams(false));
+    } else {
+      setFoundTeams([]);
     }
-    setSearchQuery("");
-    setShowResults(false);
-  };
-
-  const removeParticipant = (userId: string) => {
-    setForm({
-      ...form,
-      participants: form.participants.filter((user) => user.id !== userId),
-    });
-  };
-
-  const addTeam = (team: Team) => {
-    if (!form.teams.some((t) => t.id === team.id)) {
-      setForm({
-        ...form,
-        teams: [...form.teams, team],
-      });
-    }
-    setTeamSearchQuery("");
-    setShowTeamResults(false);
-  };
-
-  const removeTeam = (teamId: string) => {
-    setForm({
-      ...form,
-      teams: form.teams.filter((t) => t.id !== teamId),
-    });
-  };
+  }, [debouncedTeamQuery, type]);
 
   const addKeyword = () => {
     const trimmed = keywordInput.trim();
-    if (trimmed && !form.keywords.includes(trimmed)) {
-      setForm({ ...form, keywords: [...form.keywords, trimmed] });
+    if (trimmed && !keywords.includes(trimmed)) {
+      setKeywords([...keywords, trimmed]);
+      setKeywordInput("");
     }
-    setKeywordInput("");
   };
 
-  const removeKeyword = (keyword: string) => {
-    setForm({
-      ...form,
-      keywords: form.keywords.filter((k) => k !== keyword),
-    });
+  const removeKeyword = (keywordToRemove: string) => {
+    setKeywords(keywords.filter((k) => k !== keywordToRemove));
   };
 
-  const resetForm = () => {
-    setForm({
-      title: "",
-      description: "",
-      type: "",
-      dateRange: { start: null, end: null },
-      address: "",
-      participants: [],
-      teams: [],
-      keywords: [],
-    });
-    setErrors({});
-    setSearchQuery("");
-    setKeywordInput("");
-    setTeamSearchQuery("");
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addKeyword();
+    }
   };
 
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
-    // Валидация диапазона дат
-    if (!form.dateRange.start) {
-      newErrors.dateRange = "Дата начала обязательна";
-    } else {
-      const startDate = new Date(form.dateRange.start + "T00:00");
-      if (startDate < now) {
-        newErrors.dateRange = "Дата начала не может быть раньше текущей";
-      }
-    }
-
-    if (form.title.length < 4 || form.title.length > 64) {
-      newErrors.title = "Название должно быть от 4 до 64 символов";
-    }
-
-    if (form.description.length < 16 || form.description.length > 10000) {
-      newErrors.description = "Описание должно быть от 16 до 10000 символов";
-    }
-
-    if (!form.type) {
-      newErrors.type = "Выберите тип мероприятия";
-    }
-
-    return newErrors;
-  };
-
-  const handleDateChange = (value: RangeValue<ZonedDateTime> | null) => {
-    if (!value) {
-      setForm(f => ({ ...f, dateRange: { start: null, end: null } }));
-      setErrors(e => ({ ...e, dateRange: "" }));
+  const handleSubmit = async () => {
+    if (!range.start || !range.end) {
+      addToast({
+        title: "Ошибка",
+        description: "Пожалуйста, выберите диапазон времени.",
+        color: "danger",
+      });
       return;
     }
-    const start = value.start?.toString().slice(0, 10) ?? null;
-    const end   = value.end?.toString().slice(0, 10)   ?? null;
-    setForm(f => ({ ...f, dateRange: { start, end } }));
-    setErrors(e => ({ ...e, dateRange: "" }));
-  };
+    try {
+      await postEventSuggestion({
+        name,
+        description,
+        location,
+        timeStart: new Date(range.start).toISOString(),
+        timeEnd: new Date(range.end).toISOString(),
+        type,
+        keywords,
+        participants,
+        teams,
+      });
+      onClose();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+      addToast({
+        title: "Успех",
+        description: "Мероприятие успешно отправлено.",
+        color: "success",
+      });
+
+      // Сброс формы
+      setName("");
+      setDescription("");
+      setLocation("");
+      setType("general");
+      setKeywords([]);
+      setKeywordInput("");
+      setParticipants([]);
+      setTeams([]);
+      setParticipantQuery("");
+      setTeamQuery("");
+      setDebouncedParticipantQuery("");
+      setDebouncedTeamQuery("");
+      setRange({ start: initialDateTime, end: initialDateTime });
+    } catch (error: any) {
+      addToast({
+        title: "Ошибка",
+        description: error.message || "Ошибка при отправке",
+        color: "danger",
+      });
     }
-    console.log("Данные формы отправлены:", form);
-    setIsOpen(false);
-    resetForm();
   };
 
   return (
       <>
-        <div className="w-full bg-[#004e9e] text-white rounded-xl p-4 shadow-md flex justify-between items-center relative overflow-hidden font-sans">
+        <div
+            onClick={onOpen}
+            className="w-full bg-[#004e9e] text-white rounded-xl p-4 shadow-md flex justify-between items-center relative overflow-hidden cursor-pointer"
+        >
           <div className="absolute inset-0 rounded-xl pointer-events-none">
             <svg
                 className="absolute right-0 bottom-0 opacity-10 w-28 h-28"
@@ -236,314 +290,155 @@ export default function OfferEventCard() {
               <circle cx="50" cy="50" r="40" stroke="white" strokeWidth="10" />
             </svg>
           </div>
-
           <div className="z-10">
             <h3 className="text-sm font-semibold">Предложить мероприятие</h3>
             <p className="text-xs text-gray-400">Оставить заявку</p>
           </div>
-
-          <button
-              onClick={() => setIsOpen(true)}
-              className="z-10 bg-white text-black p-2 rounded-md shadow-md ml-2"
-          >
+          <button className="z-10 bg-white text-black p-2 rounded-md shadow-md ml-2">
             <Plus size={18} />
           </button>
         </div>
-        {isOpen && (
-            <div
-                className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 overflow-y-auto p-4"
-            >
-              <div
-                  className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative max-h-[90vh] overflow-y-auto"
+
+        <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+          <ModalContent>
+            <ModalHeader>Предложить мероприятие</ModalHeader>
+            <ModalBody className="flex flex-col gap-4">
+              <Input
+                  label="Название"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+              />
+              <Input
+                  label="Описание"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+              />
+              <Input
+                  label="Локация"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+              />
+
+              <CustomDateRangePicker label="Время проведения" value={range} onChange={setRange} />
+
+              <label className="text-sm font-medium">Тип мероприятия</label>
+              <select
+                  className="p-2 rounded-md border border-gray-300"
+                  value={type}
+                  onChange={(e) => {
+                    setType(e.target.value as any);
+                    setParticipants([]);
+                    setTeams([]);
+                  }}
               >
-                <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      resetForm();
-                    }}
-                    className="absolute top-3 right-3 text-gray-600 hover:text-black"
-                >
-                  <X />
-                </button>
-                <h2 className="text-xl font-semibold mb-4">Новое мероприятие</h2>
-                <form className="grid grid-cols-1 gap-4" onSubmit={handleSubmit}>
-                  <input
-                      type="text"
-                      name="title"
-                      value={form.title}
-                      onChange={handleChange}
-                      placeholder="Название мероприятия *"
-                      className={`border rounded p-2 w-full ${
-                          errors.title ? "border-red-500" : ""
-                      }`}
-                  />
-                  {errors.title && (
-                      <p className="text-red-500 text-sm">{errors.title}</p>
-                  )}
-                  <textarea
-                      name="description"
-                      value={form.description}
-                      onChange={handleChange}
-                      placeholder="Описание мероприятия *"
-                      className={`border rounded p-2 w-full ${
-                          errors.description ? "border-red-500" : ""
-                      }`}
-                  />
-                  {errors.description && (
-                      <p className="text-red-500 text-sm">{errors.description}</p>
-                  )}
-                  <select
-                      name="type"
-                      value={form.type}
-                      onChange={handleChange}
-                      className={`border rounded p-2 w-full ${
-                          errors.type ? "border-red-500" : ""
-                      }`}
-                  >
-                    <option value="">Выберите тип мероприятия *</option>
-                    <option value="Общее">Общее</option>
-                    <option value="Групповое">Групповое</option>
-                    <option value="Личное">Личное</option>
-                  </select>
-                  {errors.type && (
-                      <p className="text-red-500 text-sm">{errors.type}</p>
-                  )}
-                  <div className="rounded w-full">
-                    <DateRangePicker
-                        hideTimeZone
-                        defaultValue={{
-                          start: form.dateRange.start
-                              ? parseZonedDateTime(form.dateRange.start + "T00:00[Europe/Moscow]")
-                              : parseZonedDateTime("2025-04-01T00:45[Europe/Moscow]"),
-                          end: form.dateRange.end
-                              ? parseZonedDateTime(form.dateRange.end   + "T00:00[Europe/Moscow]")
-                              : parseZonedDateTime("2025-04-08T11:15[Europe/Moscow]"),
-                        }}
-                        label="Выберите дату *"
-                        visibleMonths={2}
-                        onChange={handleDateChange}
-                    />
-                  </div>
-                  {errors.dateRange && (
-                      <p className="text-red-500 text-sm">{errors.dateRange}</p>
-                  )}
+                <option value="general">Общее (для всех)</option>
+                <option value="group">Групповое (для команды)</option>
+                <option value="personal">Личное (для участников)</option>
+              </select>
 
-                  <input
-                      type="text"
-                      name="address"
-                      value={form.address}
-                      onChange={handleChange}
-                      placeholder="Адрес / URL"
-                      className={`border rounded p-2 w-full ${
-                          errors.address ? "border-red-500" : ""
-                      }`}
-                  />
-                  {errors.address && (
-                      <p className="text-red-500 text-sm">{errors.address}</p>
-                  )}
-                  {form.type !== "Групповое" && (
-                      <>
-                        <div className="relative">
-                          <div className="flex items-center border rounded p-2">
-                            <Search className="text-gray-400 mr-2" size={18} />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                onFocus={() => setShowResults(true)}
-                                placeholder="Добавить участников"
-                                className="w-full outline-none"
-                            />
-                          </div>
-
-                          {showResults && searchResults.length > 0 && (
-                              <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
-                                {searchResults.map((user) => (
-                                    <div
-                                        key={user.id}
-                                        className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => addParticipant(user)}
-                                    >
-                                      {user.avatar ? (
-                                          <img
-                                              src={user.avatar}
-                                              alt={user.name}
-                                              className="w-8 h-8 rounded-full mr-2"
-                                          />
-                                      ) : (
-                                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                            <User size={16} className="text-gray-500" />
-                                          </div>
-                                      )}
-                                      <span>{user.name}</span>
-                                    </div>
-                                ))}
-                              </div>
-                          )}
-                        </div>
-
-                        {/* Выбранные участники */}
-                        {form.participants.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {form.participants.map((user) => (
-                                  <div
-                                      key={user.id}
-                                      className="flex items-center bg-blue-50 rounded-full px-3 py-1"
-                                  >
-                                    {user.avatar ? (
-                                        <img
-                                            src={user.avatar}
-                                            alt={user.name}
-                                            className="w-6 h-6 rounded-full mr-2"
-                                        />
-                                    ) : (
-                                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                          <User size={12} className="text-gray-500" />
-                                        </div>
-                                    )}
-                                    <span className="text-sm mr-2">{user.name}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeParticipant(user.id)}
-                                        className="text-gray-500 hover:text-red-500"
-                                    >
-                                      <X size={14} />
-                                    </button>
-                                  </div>
-                              ))}
-                            </div>
-                        )}
-                      </>
-                  )}
-
-                  {form.type === "Групповое" && (
-                      <>
-                        <div className="relative">
-                          <div className="flex items-center border rounded p-2">
-                            <Search className="text-gray-400 mr-2" size={18} />
-                            <input
-                                type="text"
-                                value={teamSearchQuery}
-                                onChange={(e) => setTeamSearchQuery(e.target.value)}
-                                onFocus={() => setShowTeamResults(true)}
-                                placeholder="Добавить команды"
-                                className="w-full outline-none"
-                            />
-                          </div>
-
-                          {showTeamResults && teamSearchResults.length > 0 && (
-                              <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
-                                {teamSearchResults.map((team) => (
-                                    <div
-                                        key={team.id}
-                                        className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
-                                        onClick={() => addTeam(team)}
-                                    >
-                                      {team.avatar ? (
-                                          <img
-                                              src={team.avatar}
-                                              alt={team.name}
-                                              className="w-8 h-8 rounded-full mr-2"
-                                          />
-                                      ) : (
-                                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                            <User size={16} className="text-gray-500" />
-                                          </div>
-                                      )}
-                                      <span>{team.name}</span>
-                                    </div>
-                                ))}
-                              </div>
-                          )}
-                        </div>
-                        {form.teams.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {form.teams.map((team) => (
-                                  <div
-                                      key={team.id}
-                                      className="flex items-center bg-blue-50 rounded-full px-3 py-1"
-                                  >
-                                    {team.avatar ? (
-                                        <img
-                                            src={team.avatar}
-                                            alt={team.name}
-                                            className="w-6 h-6 rounded-full mr-2"
-                                        />
-                                    ) : (
-                                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                          <User size={12} className="text-gray-500" />
-                                        </div>
-                                    )}
-                                    <span className="text-sm mr-2">{team.name}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeTeam(team.id)}
-                                        className="text-gray-500 hover:text-red-500"
-                                    >
-                                      <X size={14} />
-                                    </button>
-                                  </div>
-                              ))}
-                            </div>
-                        )}
-                      </>
-                  )}
-
-                  <div>
-                    <label className="text-sm font-normal text-gray-400 mb-1">
-                      Ключевые слова
-                    </label>
-                    <div className="flex gap-2 mb-2">
-                      <input
-                          type="text"
-                          value={keywordInput}
-                          onChange={(e) => setKeywordInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addKeyword();
-                            }
-                          }}
-                          placeholder="Введите ключевое слово и нажмите Enter"
-                          className="border rounded p-2 w-full"
-                      />
-                      <button
-                          type="button"
-                          onClick={addKeyword}
-                          className="bg-blue-600 text-white px-4 rounded hover:bg-blue-700 transition"
+              {/* Ключевые слова */}
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">Ключевые слова</label>
+                <div className="flex gap-2 flex-wrap">
+                  {keywords.map((keyword) => (
+                      <Chip
+                          key={keyword}
+                          variant="flat"
+                          onClose={() => removeKeyword(keyword)}
                       >
-                        Добавить
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {form.keywords.map((kw) => (
-                          <div
-                              key={kw}
-                              className="bg-blue-50 rounded-full px-3 py-1 flex items-center gap-1"
-                          >
-                            <span className="text-sm">{kw}</span>
-                            <button
-                                type="button"
-                                onClick={() => removeKeyword(kw)}
-                                className="text-gray-500 hover:text-red-500"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                      type="submit"
-                      className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-                  >
-                    Создать мероприятие
-                  </button>
-                </form>
+                        {keyword}
+                      </Chip>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <input
+                      type="text"
+                      className="p-2 border rounded flex-1"
+                      placeholder="Введите ключевое слово"
+                      value={keywordInput}
+                      onChange={(e) => setKeywordInput(e.target.value)}
+                      onKeyDown={handleKeywordKeyDown}
+                  />
+                  <Button onClick={addKeyword}>Добавить</Button>
+                </div>
               </div>
-            </div>
-        )}
+
+              {type === "personal" && (
+                  <>
+                    <Input
+                        label="Поиск участников"
+                        placeholder="Введите имя или логин"
+                        value={participantQuery}
+                        onChange={(e) => onParticipantQueryChange(e.target.value)}
+                    />
+                    {loadingUsers ? (
+                        <Spinner />
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {foundUsers.map((user) => (
+                              <button
+                                  key={user.id}
+                                  className="px-2 py-1 bg-blue-100 rounded hover:bg-blue-200 text-sm"
+                                  onClick={() => {
+                                    if (!participants.includes(user.id)) {
+                                      setParticipants([...participants, user.id]);
+                                    }
+                                  }}
+                              >
+                                {user.name} {user.surname} ({user.login})
+                              </button>
+                          ))}
+                        </div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      Выбранные ID: {participants.join(", ")}
+                    </div>
+                  </>
+              )}
+
+              {type === "group" && (
+                  <>
+                    <Input
+                        label="Поиск команд"
+                        placeholder="Введите название команды"
+                        value={teamQuery}
+                        onChange={(e) => onTeamQueryChange(e.target.value)}
+                    />
+                    {loadingTeams ? (
+                        <Spinner />
+                    ) : Array.isArray(foundTeams) && foundTeams.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {foundTeams.map((team) => (
+                              <button
+                                  key={team.id}
+                                  className="px-2 py-1 bg-green-100 rounded hover:bg-green-200 text-sm"
+                                  onClick={() => {
+                                    if (!teams.includes(team.id)) {
+                                      setTeams([...teams, team.id]);
+                                    }
+                                  }}
+                              >
+                                {team.name}
+                              </button>
+                          ))}
+                        </div>
+                    ) : (
+                        <div className="text-gray-500 text-sm">Команды не найдены</div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      Выбранные ID: {teams.join(", ")}
+                    </div>
+                  </>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" onClick={onClose}>
+                Отмена
+              </Button>
+              <Button onClick={handleSubmit}>Отправить</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </>
   );
 }
