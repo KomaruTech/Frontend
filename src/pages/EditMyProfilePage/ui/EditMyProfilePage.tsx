@@ -39,7 +39,6 @@ const EditMyProfilePage: React.FC = () => {
         openAlert();
     }, [openAlert]);
 
-    // **Новая функция:** Сохраняет сообщение в URL и перезагружает страницу
     const triggerReloadWithAlert = useCallback((title: string, message: string, type: 'success' | 'error') => {
         const newParams = new URLSearchParams();
         newParams.set('alertTitle', encodeURIComponent(title));
