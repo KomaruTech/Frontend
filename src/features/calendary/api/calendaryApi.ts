@@ -20,25 +20,34 @@ export interface ApiEvent {
 const handleAxiosError = (error: unknown, defaultMessage: string): string => {
     if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiErrorResponse>;
-        if (axiosError.response && axiosError.response.data && axiosError.response.data.error) {
-            return axiosError.response.data.error;
-        } else if (axiosError.message) {
-            return axiosError.message;
-        }
+        return axiosError.response?.data?.error || axiosError.message || defaultMessage;
     } else if (error instanceof Error) {
         return error.message;
     }
     return defaultMessage;
 };
 
-export const fetchEvents = async (): Promise<ApiEvent[]> => {
+export const fetchEvents = async (options?: { signal?: AbortSignal }): Promise<ApiEvent[]> => {
     try {
-        const response = await api.post<ApiEvent[]>('/Event/search', {});
-        console.log('API Call: POST /Event/search - Response:', response.data);
-        return response.data;
+        const response = await api.get<ApiEvent[]>('/Event/my_events', { signal: options?.signal });
+        console.log('API Call: GET /Event/my_events - Response:', response.data);
+        if (Array.isArray(response.data)) {
+            return response.data;
+        } else if (response.status === 204) {
+            console.warn('API Call: GET /Event/my_events - Received 204 No Content, returning empty array.');
+            return [];
+        } else {
+            console.warn('API Call: GET /Event/my_events - Received non-array data:', response.data);
+            return [];
+        }
+
     } catch (error) {
+        if (axios.isCancel(error)) {
+            console.log('API Call: GET /Event/my_events - Request was cancelled:', error.message);
+            throw error;
+        }
         const msg = handleAxiosError(error, 'Неизвестная ошибка при загрузке событий');
-        console.error('API Call: POST /Event/search - Error:', error);
+        console.error('API Call: GET /Event/my_events - Error:', error);
         throw new Error(msg);
     }
 };
