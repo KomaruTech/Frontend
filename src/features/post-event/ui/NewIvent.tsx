@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Plus, X, Search, User } from "lucide-react";
-import { DateRangePicker } from "@heroui/react";
+import {DateRangePicker, type RangeValue} from "@heroui/react";
 import { parseZonedDateTime } from "@internationalized/date";
+import { type ZonedDateTime } from "@internationalized/date";
 
 interface User {
   id: string;
@@ -199,11 +200,16 @@ export default function OfferEventCard() {
     return newErrors;
   };
 
-  const handleDateChange = (range: { start?: any; end?: any }) => {
-    const start = range.start ? range.start.toString().substring(0, 10) : null;
-    const end = range.end ? range.end.toString().substring(0, 10) : null;
-    setForm((form) => ({ ...form, dateRange: { start, end } }));
-    setErrors((prev) => ({ ...prev, dateRange: "" }));
+  const handleDateChange = (value: RangeValue<ZonedDateTime> | null) => {
+    if (!value) {
+      setForm(f => ({ ...f, dateRange: { start: null, end: null } }));
+      setErrors(e => ({ ...e, dateRange: "" }));
+      return;
+    }
+    const start = value.start?.toString().slice(0, 10) ?? null;
+    const end   = value.end?.toString().slice(0, 10)   ?? null;
+    setForm(f => ({ ...f, dateRange: { start, end } }));
+    setErrors(e => ({ ...e, dateRange: "" }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -307,14 +313,10 @@ export default function OfferEventCard() {
                         hideTimeZone
                         defaultValue={{
                           start: form.dateRange.start
-                              ? parseZonedDateTime(
-                                  form.dateRange.start + "T00:00[Europe/Moscow]"
-                              )
+                              ? parseZonedDateTime(form.dateRange.start + "T00:00[Europe/Moscow]")
                               : parseZonedDateTime("2025-04-01T00:45[Europe/Moscow]"),
                           end: form.dateRange.end
-                              ? parseZonedDateTime(
-                                  form.dateRange.end + "T00:00[Europe/Moscow]"
-                              )
+                              ? parseZonedDateTime(form.dateRange.end   + "T00:00[Europe/Moscow]")
                               : parseZonedDateTime("2025-04-08T11:15[Europe/Moscow]"),
                         }}
                         label="Выберите дату *"

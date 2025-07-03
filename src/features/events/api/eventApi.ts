@@ -3,17 +3,31 @@ import api from '@shared/api';
 import axios, { AxiosError } from 'axios';
 import type { ApiErrorResponse } from '@shared/api/types';
 
+// Define the interface for the API Event response
+// This matches the schema provided in your API documentation
 export interface ApiEvent {
-    id: number;
-    title: string;
-    subtitle: string;
+    id: string;
+    name: string; // 'name' corresponds to 'title' in your Event interface
     description: string;
-    date: string;
-    time: string;
+    timeStart: string; // ISO string for start date and time
+    timeEnd: string; // ISO string for end date and time
     type?: string;
-    address?: string;
-    creator?: string;
+    status: string; // Added 'status' based on API example
+    location?: string;
+    createdById?: string;
     keywords?: string[];
+    participantIds?: string[];
+}
+
+export interface ApiUser {
+    id: string;
+    login: string;
+    name: string;
+    surname: string;
+    role: string;
+    email: string;
+    telegramUsername?: string;
+    avatarUrl?: string;
 }
 
 const handleAxiosError = (error: unknown, defaultMessage: string): string => {
@@ -24,14 +38,46 @@ const handleAxiosError = (error: unknown, defaultMessage: string): string => {
     return defaultMessage;
 };
 
-export const fetchEvents = async (): Promise<ApiEvent[]> => {
+export const fetchEvents = async (options?: { signal?: AbortSignal }): Promise<ApiEvent[]> => {
     try {
-        const response = await api.post<ApiEvent[]>('/Event/search', {});
-        console.log('API Call: POST /Event/search - Response:', response.data);
+        const response = await api.get<ApiEvent[]>('/Event/my_events', { signal: options?.signal });
+        console.log('API Call: GET /Event/my_events - Response:', response.data);
+
+        if (Array.isArray(response.data)) {
+            return response.data;
+        } else if (response.status === 204) {
+            console.warn('API Call: GET /Event/my_events - Received 204 No Content, returning empty array.');
+            return [];
+        }
+        else {
+            console.warn('API Call: GET /Event/my_events - Received non-array data:', response.data);
+            return [];
+        }
+
+    } catch (error) {
+        if (axios.isCancel(error)) {
+            console.log('API Call: GET /Event/my_events - Request was cancelled:', error.message);
+            throw error;
+        }
+        const msg = handleAxiosError(error, 'Неизвестная ошибка при загрузке событий');
+        console.error('API Call: GET /Event/my_events - Error:', error);
+        throw new Error(msg);
+    }
+};
+
+
+export const fetchUserById = async (userId: string, options?: { signal?: AbortSignal }): Promise<ApiUser> => {
+    try {
+        const response = await api.get<ApiUser>(`/User/${userId}`, { signal: options?.signal });
+        console.log(`API Call: GET /User/${userId} - Response:`, response.data);
         return response.data;
     } catch (error) {
-        const msg = handleAxiosError(error, 'Неизвестная ошибка при загрузке событий');
-        console.error('API Call: POST /Event/search - Error:', error);
+        if (axios.isCancel(error)) {
+            console.log(`API Call: GET /User/${userId} - Request was cancelled:`, error.message);
+            throw error;
+        }
+        const msg = handleAxiosError(error, `Неизвестная ошибка при загрузке данных пользователя ${userId}`);
+        console.error(`API Call: GET /User/${userId} - Error:`, error);
         throw new Error(msg);
     }
 };
