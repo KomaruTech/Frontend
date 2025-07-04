@@ -67,7 +67,7 @@ export default function RequestsSection() {
 
       {/* Выпадающий список */}
       {isVisible && (
-        <div className="absolute z-10 mt-2 bg-white border border-blue-300 rounded-xl shadow-lg p-4 w-[320px] max-h-[400px] overflow-y-auto">
+        <div className="absolute z-40 mt-2 bg-white border border-blue-300 rounded-xl shadow-lg p-4 w-[320px] max-h-[400px] overflow-y-auto">
           {requests.length === 0 ? (
             <p className="text-gray-500 text-sm">Нет активных заявок</p>
           ) : (
