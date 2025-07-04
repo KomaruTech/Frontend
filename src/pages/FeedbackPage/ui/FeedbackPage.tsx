@@ -46,11 +46,10 @@ const ApplicationPage: React.FC = () => {
       }
     >
       {/* Центр: контент (отзывы) */}
-      <div className="overflow-auto max-h-[60vh] w-full px-4 py-6">
-        <h1 className="text-2xl font-semibold mb-4 text-center">Отзывы</h1>
+      <div className="">
         <div className="flex flex-col gap-4">
           {reviews.map((review) => (
-            <div key={review.id} className="w-full max-w-md mx-auto">
+            <div key={review.id} className="">
               <ReviewCard
                 title={review.title}
                 subtitle={review.subtitle}

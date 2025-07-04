@@ -38,10 +38,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     <>
       <div
         onClick={onOpen}
-        className="cursor-pointer border border-blue-500 rounded-xl p-4 shadow-md w-full max-w-xl hover:shadow-lg transition"
+        className="cursor-pointer border border-blue-500 rounded-xl p-4 shadow-md hover:shadow-lg transition w-[600px] ml-[50px]"
       >
         <h2 className="text-md font-semibold">{title}</h2>
-        <p className="text-sm font-medium">{subtitle}</p>
+        <p className="text-sm font-medium text-gray-800">{subtitle}</p>
         <p className="text-sm text-gray-600">{description}</p>
 
         <div className="flex gap-4 mt-3 text-sm text-gray-700 items-center">

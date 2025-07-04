@@ -4,7 +4,6 @@ import OfferEventCar from "@features/post-event/ui/NewIvent.tsx";
 import SidebarMenu from "@widgets/Header/ui/Main_menu";
 import { CustomCalendar } from "@features/calendary";
 import PastEventsList from "@features/events/ui/PastEventsList.tsx";
-import RequestsSection from "@features/applications/ui/application";
 import type { Event } from "@entities/event";
 import { Header } from "@widgets/Header";
 
@@ -46,8 +45,6 @@ export default function EventsPage() {
               Предстоящие
             </button>
           </div>
-
-          <RequestsSection />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
