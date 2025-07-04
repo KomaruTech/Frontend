@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, BarChart, PieChart, FileText } from "lucide-react"; // импортируем иконку для "Заявки"
+import { Home, BarChart, FileText } from "lucide-react"; // импортируем иконку для "Заявки"
 import { useSelector } from 'react-redux';
 import type { RootState } from '@app/store';
 
@@ -9,7 +9,6 @@ function SidebarMenu() {
   const items = [
     { name: "Главная", icon: <Home size={16} />, path: "/" },
     { name: "Мероприятия", icon: <BarChart size={16} />, path: "/events" },
-    { name: "Статистика", icon: <PieChart size={16} />, path: "/stats" },
   ];
 
   if (userRole === "administrator") {
