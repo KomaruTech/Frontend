@@ -29,7 +29,7 @@ const handleAxiosError = (error: unknown, defaultMessage: string): string => {
 
 export const fetchEvents = async (options?: { signal?: AbortSignal }): Promise<ApiEvent[]> => {
     try {
-        const response = await api.get<ApiEvent[]>('/Event/my_events', { signal: options?.signal });
+        const response = await api.post<ApiEvent[]>('/Event/search', { signal: options?.signal });
         console.log('API Call: GET /Event/my_events - Response:', response.data);
         if (Array.isArray(response.data)) {
             return response.data;

@@ -43,15 +43,15 @@ export const CustomCalendar: React.FC = () => {
         const loadEvents = async () => {
             try {
                 const apiEvents = await fetchEvents();
-                // Validate if apiEvents is an array before mapping
-                if (Array.isArray(apiEvents)) {
-                    const formattedEvents = apiEvents.map((event: ApiEvent): DisplayEvent => {
+                const confirmed = apiEvents.filter(e => e.status === 'confirmed');
+                if (Array.isArray(confirmed)) {
+                    const formattedEvents = confirmed.map((event: ApiEvent): DisplayEvent => {
                         const startDate = new Date(event.timeStart);
                         const endDate = new Date(event.timeEnd);
                         return {
                             title: event.name,
                             color: getColorForType(event.type),
-                            date: event.timeStart, // Keep original date string if needed, or format
+                            date: event.timeStart,
                             startDate,
                             endDate,
                             startTime: startDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}),
@@ -63,19 +63,18 @@ export const CustomCalendar: React.FC = () => {
                     });
                     setEvents(formattedEvents);
                 } else {
-                    console.error("fetchEvents did not return an array:", apiEvents);
-                    setEvents([]); // Ensure events is an empty array to prevent further issues
+                    console.error("fetchEvents did not return an array:", confirmed);
+                    setEvents([]);
                 }
             } catch (error) {
                 console.error("Failed to load events:", error);
-                setEvents([]); // Set to empty array on error to ensure consistent state
+                setEvents([]);
             }
         };
 
         loadEvents();
     }, []);
 
-    // today только один раз вычисляется для блока "Сегодня"
     const today = useMemo(() => new Date(), []);
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -116,7 +115,6 @@ export const CustomCalendar: React.FC = () => {
                 key={day}
                 onClick={() => {
                     if (dayEvents.length === 0) return;
-                    // Сортировка по времени через объект Date
                     const sortedEvents = [...dayEvents].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
                     setSelectedDayEvents(sortedEvents);
                     onOpen();
@@ -207,29 +205,46 @@ export const CustomCalendar: React.FC = () => {
             <Modal isOpen={isOpen} onOpenChange={onClose}>
                 <ModalContent>
                     <ModalHeader>События дня</ModalHeader>
-                    <ModalBody>
-                        {selectedDayEvents.length === 0
-                            ? <div>Нет событий на этот день.</div>
-                            : selectedDayEvents.map((event, idx) => (
-                                <div key={idx} className="mb-2">
+                    <ModalBody className="break-words break-all">
+                        {selectedDayEvents.length === 0 ? (
+                            <div>Нет событий на этот день.</div>
+                        ) : (
+                            selectedDayEvents.map((event, idx) => (
+                                <div key={idx} className="mb-4">
                                     <div className="flex items-center gap-2">
-                                        <span className="w-3 h-3 rounded-full inline-block"
-                                              style={{backgroundColor: event.color}}/>
+          <span
+              className="w-3 h-3 rounded-full inline-block"
+              style={{ backgroundColor: event.color }}
+          />
                                         <span className="font-bold">{event.title}</span>
                                     </div>
-                                    <div className="text-sm text-gray-500">
-                                        <span>{event.startTime} — {event.endTime}, {event.location || "Локация не указана"}</span><br/>
-                                        <span>Тип: {typeTranslations[event.type]}</span><br/>
-                                        <span>Организатор: {event.createdBy || "Не указан"}</span>
+
+                                    <div className="text-sm text-gray-500 mt-1">
+                                        <div>
+                                            <span className="font-medium">Время:</span> {event.startTime} — {event.endTime}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">Локация:</span> {event.location || "Локация не указана"}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">Тип:</span> {typeTranslations[event.type]}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">Организатор:</span> {event.createdBy || "Не указан"}
+                                        </div>
                                     </div>
                                 </div>
-                            ))}
+                            ))
+                        )}
                     </ModalBody>
                     <ModalFooter>
-                        <Button onPress={onClose} color="primary">Закрыть</Button>
+                        <Button onPress={onClose} color="primary">
+                            Закрыть
+                        </Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
         </div>
     );
 };
