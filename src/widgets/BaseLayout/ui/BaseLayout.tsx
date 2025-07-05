@@ -25,7 +25,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
                     )}
 
                     {/* Main Content */}
-                    <div className="flex-1 flex flex-col gap-6 order-2 lg:order-2 pr-2 sm:pr-4 lg:pr-6">
+                    <div className="flex-1 flex flex-col gap-6 order-2">
                         {children}
                     </div>
 
