@@ -1,3 +1,2 @@
-import RequestsSection from '@features/applications/ui/application'
-
-export default RequestsSection
+export { EventModerationList } from './ui/EventModerationList.tsx';
+export { confirmEvent, rejectEvent } from './api/applicationApi';

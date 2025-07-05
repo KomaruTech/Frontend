@@ -19,6 +19,7 @@ import {
 import { fetchMyProfile } from "@features/profile/api/profileApi";
 import { setUserProfileData } from "@features/auth/model/authSlice";
 import type { RootState } from "@app/store";
+import CreateTeamModal from "@/features/createTeam";
 
 const HomePage: React.FC = () => {
     const dispatch = useDispatch();
@@ -53,6 +54,7 @@ const HomePage: React.FC = () => {
                     <Header />
                     <OfferEventCar />
                     <CustomCalendar />
+                    <CreateTeamModal />
                     <InvitationToEvent />
                 </>
             }
