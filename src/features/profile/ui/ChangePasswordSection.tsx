@@ -24,8 +24,6 @@ interface ChangePasswordSectionProps {
 export const ChangePasswordSection: React.FC<ChangePasswordSectionProps> = ({ openAlertDialog }) => {
     const dispatch = useDispatch();
     const { isChangingPassword, changePasswordError, changePasswordSuccess } = useSelector((state: RootState) => state.profile);
-
-    // Effect for password change status
     useEffect(() => {
         if (changePasswordError) {
             openAlertDialog('Ошибка смены пароля', changePasswordError, 'error');
@@ -35,7 +33,6 @@ export const ChangePasswordSection: React.FC<ChangePasswordSectionProps> = ({ op
             dispatch(clearChangePasswordStatus());
         }
     }, [changePasswordError, changePasswordSuccess, dispatch, openAlertDialog]);
-
     return (
         <Formik
             initialValues={{ oldPassword: '', newPassword: '', confirmPassword: '' }}

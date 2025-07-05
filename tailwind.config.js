@@ -1,4 +1,5 @@
-const {heroui} = require("@heroui/react");
+const { heroui } = require("@heroui/react");
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,9 +8,18 @@ export default {
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: 0, transform: 'translateY(10px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
+        },
+      },
+    },
   },
   darkMode: "class",
   plugins: [heroui()],
 }
-

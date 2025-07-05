@@ -43,26 +43,32 @@ export const CustomCalendar: React.FC = () => {
         const loadEvents = async () => {
             try {
                 const apiEvents = await fetchEvents();
-                // Преобразование данных API в формат отображения с датой
-                const formattedEvents = apiEvents.map((event: ApiEvent): DisplayEvent => {
-                    const startDate = new Date(event.timeStart);
-                    const endDate = new Date(event.timeEnd);
-                    return {
-                        title: event.name,
-                        color: getColorForType(event.type),
-                        date: event.timeStart,
-                        startDate,
-                        endDate,
-                        startTime: startDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}),
-                        endTime: endDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}),
-                        location: event.location,
-                        createdBy: event.createdById,
-                        type: event.type,
-                    };
-                });
-                setEvents(formattedEvents);
+                // Validate if apiEvents is an array before mapping
+                if (Array.isArray(apiEvents)) {
+                    const formattedEvents = apiEvents.map((event: ApiEvent): DisplayEvent => {
+                        const startDate = new Date(event.timeStart);
+                        const endDate = new Date(event.timeEnd);
+                        return {
+                            title: event.name,
+                            color: getColorForType(event.type),
+                            date: event.timeStart, // Keep original date string if needed, or format
+                            startDate,
+                            endDate,
+                            startTime: startDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}),
+                            endTime: endDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}),
+                            location: event.location,
+                            createdBy: event.createdById,
+                            type: event.type,
+                        };
+                    });
+                    setEvents(formattedEvents);
+                } else {
+                    console.error("fetchEvents did not return an array:", apiEvents);
+                    setEvents([]); // Ensure events is an empty array to prevent further issues
+                }
             } catch (error) {
                 console.error("Failed to load events:", error);
+                setEvents([]); // Set to empty array on error to ensure consistent state
             }
         };
 

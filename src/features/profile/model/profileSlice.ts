@@ -36,7 +36,6 @@ const profileSlice = createSlice({
     name: 'profile',
     initialState,
     reducers: {
-        // Fetching profile
         fetchProfilePending: (state) => {
             state.isLoading = true;
             state.error = null;
@@ -50,7 +49,6 @@ const profileSlice = createSlice({
             state.error = action.payload;
             state.profile = null;
         },
-        // Updating profile
         updateProfilePending: (state) => {
             state.isUpdatingProfile = true;
             state.updateProfileError = null;
@@ -63,7 +61,6 @@ const profileSlice = createSlice({
             state.isUpdatingProfile = false;
             state.updateProfileError = action.payload;
         },
-        // Changing password
         changePasswordPending: (state) => {
             state.isChangingPassword = true;
             state.changePasswordError = null;
@@ -78,15 +75,6 @@ const profileSlice = createSlice({
             state.changePasswordError = action.payload;
             state.changePasswordSuccess = false;
         },
-        // Reset statuses
-        clearUpdateProfileStatus: (state) => {
-            state.updateProfileError = null;
-        },
-        clearChangePasswordStatus: (state) => {
-            state.changePasswordError = null;
-            state.changePasswordSuccess = false;
-        },
-        // Avatar Reducers
         uploadAvatarPending: (state) => {
             state.isUploadingAvatar = true;
             state.uploadAvatarError = null;
@@ -114,6 +102,13 @@ const profileSlice = createSlice({
         deleteAvatarFailure: (state, action: PayloadAction<string>) => {
             state.isDeletingAvatar = false;
             state.deleteAvatarError = action.payload;
+        },
+        clearUpdateProfileStatus: (state) => {
+            state.updateProfileError = null;
+        },
+        clearChangePasswordStatus: (state) => {
+            state.changePasswordError = null;
+            state.changePasswordSuccess = false;
         },
         clearAvatarStatus: (state) => {
             state.uploadAvatarError = null;
