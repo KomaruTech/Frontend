@@ -78,7 +78,7 @@ export const EventModerationList: React.FC = () => {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-3">
             {events.map((event) => (
                 <EventCard key={event.id} event={event} onEventAction={loadEvents} />
             ))}
@@ -94,12 +94,13 @@ interface EventCardProps {
 const EventCard: React.FC<EventCardProps> = ({ event, onEventAction }) => {
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const [creator, setCreator] = useState<ApiUser | null>(null);
-    const [creatorLoading, setCreatorLoading] = useState(true);
+    const [cardLoading, setCardLoading] = useState(true); // New state for overall card loading
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
 
     useEffect(() => {
-        setCreatorLoading(true);
+        // Set cardLoading to true when starting to fetch creator data
+        setCardLoading(true);
         getUserById(event.createdById)
             .then(setCreator)
             .catch((err) => {
@@ -109,18 +110,18 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEventAction }) => {
                     description: "Не удалось загрузить данные создателя мероприятия.",
                     color: "warning",
                 });
+                setCreator(null); // Ensure creator is null on error
             })
-            .finally(() => setCreatorLoading(false));
+            .finally(() => setCardLoading(false)); // Set cardLoading to false when fetching is complete
     }, [event.createdById]);
 
     const handleAction = async (action: "confirm" | "reject") => {
         try {
-            onOpenChange(); // Закрываем модалку сразу
+            onOpenChange();
             if (action === "confirm") {
                 setConfirmLoading(true);
                 await confirmEvent(event.id);
-                // ПОРЯДОК ИЗМЕНЁН: сначала перезагружаем данные
-                await onEventAction(); // Ждем, пока данные перезагрузятся
+                await onEventAction();
                 addToast({
                     title: "Успешно",
                     description: "Мероприятие успешно подтверждено!",
@@ -129,8 +130,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEventAction }) => {
             } else {
                 setRejectLoading(true);
                 await rejectEvent(event.id);
-                // ПОРЯДОК ИЗМЕНЁН: сначала перезагружаем данные
-                await onEventAction(); // Ждем, пока данные перезагрузятся
+                await onEventAction();
                 addToast({
                     title: "Успешно",
                     description: "Мероприятие отклонено.",
@@ -166,18 +166,24 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEventAction }) => {
 
     return (
         <>
-            <Card className="max-w-full md:max-w-2xl lg:max-w-3xl transition-shadow duration-300 ease-in-out transform rounded-lg border border-gray-200">
+            <Card className="max-w-full md:max-w-2xl lg:max-w-3xl transition-shadow duration-300 ease-in-out transform rounded-lg border border-gray-200 relative">
+                {cardLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10 rounded-lg">
+                        <Spinner label="Загрузка данных карточки..." size="md" />
+                    </div>
+                )}
                 <CardHeader className="flex gap-3">
                     <div className="flex flex-col flex-grow min-w-0">
                         <p className="text-xl font-bold text-gray-900 truncate">{event.name}</p>
-                        {creatorLoading ? (
-                            <Spinner size="sm" label="Загрузка создателя..." />
-                        ) : creator ? (
-                            <p className="text-sm text-default-500 truncate">
-                                Создатель: {creator.name} {creator.surname}
-                            </p>
-                        ) : (
-                            <p className="text-sm text-red-500 truncate">Создатель неизвестен</p>
+                        {/* Creator information will be hidden by the spinner when loading */}
+                        {!cardLoading && (
+                            creator ? (
+                                <p className="text-sm text-default-500 truncate">
+                                    Создатель: {creator.name} {creator.surname}
+                                </p>
+                            ) : (
+                                <p className="text-sm text-red-500 truncate">Создатель неизвестен</p>
+                            )
                         )}
                     </div>
                 </CardHeader>
@@ -204,7 +210,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEventAction }) => {
                 <Divider />
 
                 <CardFooter className="flex justify-end pt-3">
-                    <Button onPress={onOpen} color="primary" className="px-6 py-2">
+                    <Button onPress={onOpen} color="primary" className="px-6 py-2" isDisabled={cardLoading}>
                         Посмотреть детали
                     </Button>
                 </CardFooter>
@@ -243,7 +249,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEventAction }) => {
                             <User size={20} className="text-purple-600 flex-shrink-0" />
                             <strong className="flex-shrink-0">Создатель:</strong>{" "}
                             <span className="break-words break-all w-full">
-                                {creatorLoading ? (
+                                {cardLoading ? ( // Use cardLoading here as well for consistency
                                     <Spinner size="sm" />
                                 ) : creator ? (
                                     `${creator.name} ${creator.surname}`
