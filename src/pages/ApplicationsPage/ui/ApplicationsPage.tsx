@@ -6,6 +6,7 @@ import InvitationToEvent from "@widgets/Invitation_to_event/ui/InvitationToEvent
 import SidebarMenu from "@widgets/Header/ui/Main_menu";
 import { Header } from "@widgets/Header";
 import React from "react";
+import RequestsSection from "@/features/applications";
 
 
 const ApplicationPage: React.FC = () => {
@@ -17,7 +18,8 @@ const ApplicationPage: React.FC = () => {
                 <OfferEventCar/>
                 <CustomCalendar/>
                 <InvitationToEvent/>
-            </>} children={undefined}>
+            </>} >
+            <RequestsSection />
         </BaseLayout>
     );
 };
