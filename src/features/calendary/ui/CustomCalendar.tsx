@@ -156,7 +156,6 @@ export const CustomCalendar: React.FC = () => {
         }
     }
 
-    // Форматирование корректное, но выделяем функцию для заглавной буквы (учтём, если месяц уже с большой)
     function capitalize(word: string) {
         if (!word) return word;
         return word.charAt(0).toUpperCase() + word.slice(1);
