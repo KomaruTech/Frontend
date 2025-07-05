@@ -3,20 +3,19 @@ import api from '@shared/api';
 import axios, { AxiosError } from 'axios';
 import type { ApiErrorResponse } from '@shared/api/types';
 
-// Define the interface for the API Event response
-// This matches the schema provided in your API documentation
 export interface ApiEvent {
     id: string;
-    name: string; // 'name' corresponds to 'title' in your Event interface
+    name: string;
     description: string;
-    timeStart: string; // ISO string for start date and time
-    timeEnd: string; // ISO string for end date and time
-    type?: string;
-    status: string; // Added 'status' based on API example
+    timeStart: string;
+    timeEnd: string;
     location?: string;
-    createdById?: string;
-    keywords?: string[];
-    participantIds?: string[];
+    type: string;
+    status: string;
+    createdById: string;
+    keywords: string[];
+    participantIds: string[];
+    teamIds: string[];
 }
 
 export interface ApiUser {

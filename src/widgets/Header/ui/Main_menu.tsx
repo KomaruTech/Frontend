@@ -12,7 +12,7 @@ function SidebarMenu() {
     { name: "Отзывы", icon: <MessageCircle size={16} />, path: "/feedback" },
   ];
 
-  if (userRole === "administrator") {
+  if (userRole === "administrator" || userRole === "manager") {
     items.push({ name: "Заявки", icon: <FileText size={16} />, path: "/applications" });
   }
 

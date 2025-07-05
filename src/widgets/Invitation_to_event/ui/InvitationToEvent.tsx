@@ -19,9 +19,6 @@ const InvitationToEvent = () => {
 
   return (
     <div className="relative h-[590px] bg-gray-100">
-      {/* Основной контент страницы */}
-
-      {/* Блок в правом нижнем углу */}
       <div className="absolute right-4">
         <h1 className="text-xl mb-4">Приглашение На Мероприятие</h1>
         <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-6 rounded-lg shadow-lg w-[323px] max-w-md relative overflow-hidden">
