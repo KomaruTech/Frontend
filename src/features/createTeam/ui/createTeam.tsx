@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Button,
   Input,
@@ -10,49 +10,86 @@ import {
   useDisclosure,
   addToast,
   Chip,
+  Spinner,
 } from "@heroui/react";
 import { Plus } from "lucide-react";
-import { teamSchema, type TeamFormValues } from "@shared/lib/utils/validationTeam";
+import { teamSchema } from "@shared/lib/utils/validationTeam";
+import { searchUsers, type UserSearchResponse } from "@features/post-event/api/postEventApi";
+import { createTeam } from "@features/createTeam/api/createTeamApi";
+import axios from "axios";
 
-const mockUsers = [
-  { id: "1", name: "Анна", surname: "Иванова", login: "anna123" },
-  { id: "2", name: "Игорь", surname: "Смирнов", login: "igor_s" },
-  { id: "3", name: "Мария", surname: "Кузнецова", login: "mkuz" },
-];
+interface CreateTeamCardProps {
+  onCreateTeam?: () => void;
+}
 
-export default function CreateTeamCard() {
+type TeamFormErrors = {
+  name?: string;
+  description?: string;
+  userIds?: string;
+};
+
+export default function CreateTeamCard({ onCreateTeam }: CreateTeamCardProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [foundUsers, setFoundUsers] = useState<typeof mockUsers>([]);
-  const [userIds, setUserIds] = useState<string[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<Record<string, string>>({});
-  const [errors, setErrors] = useState<Partial<Record<keyof TeamFormValues, string>> | null>(null);
 
+  const [participantQuery, setParticipantQuery] = useState("");
+  const [debouncedParticipantQuery, setDebouncedParticipantQuery] = useState("");
+  const [foundUsers, setFoundUsers] = useState<UserSearchResponse[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Record<string, UserSearchResponse>>({});
+  const [userIds, setUserIds] = useState<string[]>([]);
+
+  const [errors, setErrors] = useState<TeamFormErrors | null>(null);
   const searchTimer = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
+  const onParticipantQueryChange = (value: string) => {
+    setParticipantQuery(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-
     searchTimer.current = setTimeout(() => {
-      const query = searchQuery.toLowerCase();
-      const results = mockUsers.filter(
-        (u) =>
-          u.login.toLowerCase().includes(query) ||
-          u.name.toLowerCase().includes(query) ||
-          u.surname.toLowerCase().includes(query)
-      );
-      setFoundUsers(results);
-    }, 300);
-  }, [searchQuery]);
+      setDebouncedParticipantQuery(value);
+    }, 400);
+  };
 
-  const addUser = (user: typeof mockUsers[0]) => {
+  useEffect(() => {
+    if (debouncedParticipantQuery.length >= 2) {
+      setLoadingUsers(true);
+      searchUsers(debouncedParticipantQuery)
+          .then((res) => {
+            if (Array.isArray(res)) {
+              setFoundUsers(res);
+            } else if (
+                res &&
+                typeof res === "object" &&
+                "data" in res &&
+                Array.isArray((res as { data?: unknown }).data)
+            ) {
+              setFoundUsers((res as { data: UserSearchResponse[] }).data);
+            } else {
+              setFoundUsers([]);
+              console.warn("Неверный формат ответа searchUsers API:", res); // Переведено
+            }
+          })
+          .catch((err) => {
+            console.error("Ошибка при поиске пользователей:", err); // Переведено
+            setFoundUsers([]);
+          })
+          .finally(() => setLoadingUsers(false));
+    } else {
+      setFoundUsers([]);
+    }
+  }, [debouncedParticipantQuery]);
+
+
+  const addUser = (user: UserSearchResponse) => {
     if (!userIds.includes(user.id)) {
       setUserIds([...userIds, user.id]);
-      setSelectedUsers((prev) => ({ ...prev, [user.id]: `${user.name} ${user.surname}` }));
+      setSelectedUsers((prev) => ({ ...prev, [user.id]: user }));
     }
+    setParticipantQuery("");
+    setDebouncedParticipantQuery("");
+    setFoundUsers([]);
   };
 
   const removeUser = (id: string) => {
@@ -64,7 +101,7 @@ export default function CreateTeamCard() {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const result = teamSchema.safeParse({ name, description, userIds });
 
     if (!result.success) {
@@ -74,98 +111,141 @@ export default function CreateTeamCard() {
         description: flat.description?.[0],
         userIds: flat.userIds?.[0],
       });
+      addToast({
+        title: "Ошибка валидации", // Переведено
+        description: "Пожалуйста, заполните все обязательные поля корректно.", // Переведено
+        color: "danger",
+      });
       return;
     }
 
-    onClose();
+    try {
+      const newTeam = await createTeam({ name, description, userIds });
 
-    addToast({
-      title: "Успешно",
-      description: "Команда создана",
-      color: "success",
-    });
+      onClose();
+      addToast({
+        title: "Успешно", // Переведено
+        description: `Команда "${newTeam.name}" создана!`, // Переведено
+        color: "success",
+      });
 
-    setName("");
-    setDescription("");
-    setUserIds([]);
-    setSelectedUsers({});
-    setSearchQuery("");
-    setFoundUsers([]);
-    setErrors(null);
+      setName("");
+      setDescription("");
+      setUserIds([]);
+      setSelectedUsers({});
+      setParticipantQuery("");
+      setDebouncedParticipantQuery("");
+      setFoundUsers([]);
+      setErrors(null);
+
+      onCreateTeam?.();
+    } catch (error) {
+      let errorMessage = "Не удалось создать команду"; // Переведено
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (axios.isAxiosError(error) && error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      addToast({
+        title: "Ошибка", // Переведено
+        description: errorMessage,
+        color: "danger",
+      });
+    }
   };
 
   return (
-    <>
-      {/* Центрируем кнопку */}
-      <div className="flex justify-center my-4 mr-[80px]">
-        <div
-          onClick={onOpen}
-          className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer select-none"
-        >
-          <Plus size={18} />
-          <span className="font-semibold text-sm">Создать команду</span>
+      <>
+        <div className="flex justify-center my-4 items-center">
+          <div
+              onClick={onOpen}
+              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer select-none"
+          >
+            <Plus size={18} />
+            <span className="font-semibold text-sm">Создать команду</span> {/* Переведено */}
+          </div>
         </div>
-      </div>
 
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <ModalContent>
-          <ModalHeader>Создание команды</ModalHeader>
-          <ModalBody className="flex flex-col gap-4">
-            <Input
-              label="Название команды"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            {errors?.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+        <Modal isOpen={isOpen} onClose={onClose} size="lg">
+          <ModalContent>
+            <ModalHeader>Создать новую команду</ModalHeader> {/* Переведено */}
+            <ModalBody className="flex flex-col gap-4">
+              <Input
+                  label="Название команды" // Переведено
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  isInvalid={!!errors?.name}
+                  errorMessage={errors?.name}
+              />
 
-            <Input
-              label="Описание"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            {errors?.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+              <Input
+                  label="Описание" // Переведено
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  isInvalid={!!errors?.description}
+                  errorMessage={errors?.description}
+              />
 
-            <Input
-              label="Добавить участника по логину или имени"
-              placeholder="Введите имя или логин"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {errors?.userIds && <p className="text-red-500 text-sm mt-1">{errors.userIds}</p>}
+              <Input
+                  label="Добавить участника по логину или имени" // Переведено
+                  placeholder="Введите имя или логин" // Переведено
+                  value={participantQuery}
+                  onChange={(e) => onParticipantQueryChange(e.target.value)}
+                  isInvalid={!!errors?.userIds}
+                  errorMessage={errors?.userIds}
+              />
 
-            {foundUsers.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {foundUsers.map((user) => (
-                  <button
-                    key={user.id}
-                    className="px-2 py-1 bg-blue-100 rounded hover:bg-blue-200 text-sm"
-                    onClick={() => addUser(user)}
-                  >
-                    {user.name} {user.surname} ({user.login})
-                  </button>
-                ))}
+              {loadingUsers ? (
+                  <div className="flex justify-center py-4">
+                    <Spinner size="md" label="Поиск пользователей..." /> {/* Переведено */}
+                  </div>
+              ) : foundUsers.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded">
+                    {foundUsers.map((user) =>
+                        !userIds.includes(user.id) ? (
+                            <button
+                                key={user.id}
+                                className="px-2 py-1 bg-blue-100 rounded hover:bg-blue-200 text-sm"
+                                onClick={() => addUser(user)}
+                            >
+                              {user.name} {user.surname} ({user.login})
+                            </button>
+                        ) : null
+                    )}
+                  </div>
+              ) : debouncedParticipantQuery.length >= 2 && !loadingUsers ? (
+                  <p className="text-sm text-gray-500">Пользователи не найдены.</p>
+                ) : (
+                <p className="text-sm text-gray-500">Введите не менее 2 символов для поиска.</p>
+                )}
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {userIds.length > 0 ? (
+                    userIds.map((id) => {
+                      const user = selectedUsers[id];
+                      return (
+                          <Chip key={id} variant="flat" onClose={() => removeUser(id)}>
+                            {user ? `${user.name} ${user.surname}` : `ID: ${id}`}
+                          </Chip>
+                      );
+                    })
+                ) : (
+                    <p className="text-sm text-gray-500">Участники не выбраны.</p>
+                  )}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">Пользователи не найдены</p>
-            )}
+            </ModalBody>
 
-            <div className="flex flex-wrap gap-2">
-              {userIds.map((id) => (
-                <Chip key={id} variant="flat" onClose={() => removeUser(id)}>
-                  {selectedUsers[id] || id}
-                </Chip>
-              ))}
-            </div>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button variant="ghost" onClick={onClose}>
-              Отмена
-            </Button>
-            <Button onClick={handleSubmit}>Сохранить</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+            <ModalFooter>
+              <Button variant="ghost" onPress={onClose}>
+                Отмена {/* Переведено */}
+              </Button>
+              <Button onPress={handleSubmit}>Создать</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </>
   );
 }
