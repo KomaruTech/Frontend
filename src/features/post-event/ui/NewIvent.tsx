@@ -376,8 +376,8 @@ export default function OfferEventCard() {
                   value={type}
                   onChange={(e) => {
                     setType(e.target.value as any);
-                    setSelectedParticipants({}); // Reset selected on type change
-                    setSelectedTeams({}); // Reset selected on type change
+                    setSelectedParticipants({});
+                    setSelectedTeams({});
                   }}
               >
                 <option value="general">Общее (для всех)</option>

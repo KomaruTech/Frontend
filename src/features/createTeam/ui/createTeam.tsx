@@ -68,11 +68,11 @@ export default function CreateTeamCard({ onCreateTeam }: CreateTeamCardProps) {
               setFoundUsers((res as { data: UserSearchResponse[] }).data);
             } else {
               setFoundUsers([]);
-              console.warn("Неверный формат ответа searchUsers API:", res); // Переведено
+              console.warn("Неверный формат ответа searchUsers API:", res);
             }
           })
           .catch((err) => {
-            console.error("Ошибка при поиске пользователей:", err); // Переведено
+            console.error("Ошибка при поиске пользователей:", err);
             setFoundUsers([]);
           })
           .finally(() => setLoadingUsers(false));

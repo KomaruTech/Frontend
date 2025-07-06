@@ -51,7 +51,6 @@ const formatDateTime = (
   const time = start.toLocaleTimeString("ru-RU", timeOptions);
   const endTime = end.toLocaleTimeString("ru-RU", timeOptions);
 
-  // For input type="datetime-local"
   const localStartTime = new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
   const localEndTime = new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
 
