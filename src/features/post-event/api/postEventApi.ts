@@ -53,7 +53,7 @@ export const postEventSuggestion = async (payload: PostEventDto): Promise<void> 
 // Поиск пользователей по запросу
 export const searchUsers = async (query: string): Promise<UserSearchResponse[]> => {
     try {
-        const response = await api.post<UserSearchResponse[]>('/User/search', { query, role: 'member' });
+        const response = await api.post<UserSearchResponse[]>('/User/search', { query });
         return response.data;
     } catch (error) {
         const err = error as AxiosError<ApiErrorResponse>;

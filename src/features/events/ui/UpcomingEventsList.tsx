@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar, Clock } from "lucide-react";
 import {
   Button,
@@ -8,48 +8,61 @@ import {
   ModalFooter,
   ModalHeader,
   useDisclosure,
+  Spinner,
 } from "@heroui/react";
 
-interface Event {
-  id: number;
-  title: string;
-  subtitle: string;
-  description: string;
-  date: string;
-  time: string;
-  type?: string;
-  address?: string;
-  creator?: string;
-  keywords?: string[];
-}
+import { fetchInvitedEvents, respondToInvitation } from "@features/events/api/eventApi"; // путь адаптируй
+import type { ApiEvent } from "@features/events/api/eventApi";
 
-interface Props {
-  events: Event[];
-  onSelect: (event: Event | null) => void;
-  selectedEvent: Event | null;
-  onEnroll: () => void;
-}
-
-const UpcomingEventsList: React.FC<Props> = ({
-                                               events,
-                                               onSelect,
-                                               selectedEvent,
-                                               onEnroll,
-                                             }) => {
+const InvitedEventsList: React.FC = () => {
+  const [events, setEvents] = useState<ApiEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<ApiEvent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isResponding, setIsResponding] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
-    if (selectedEvent) {
-      onOpen();
-    } else {
-      onClose();
-    }
-  }, [selectedEvent, onOpen, onClose]);
+    const controller = new AbortController();
+    fetchInvitedEvents({ signal: controller.signal })
+        .then(setEvents)
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
 
-  const handleModalClose = () => {
-    onClose();
-    onSelect(null);
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (selectedEvent) onOpen();
+    else onClose();
+  }, [selectedEvent]);
+
+  const handleModalClose = () => setSelectedEvent(null);
+
+  const handleRespond = async (status: "approved" | "rejected") => {
+    if (!selectedEvent) return;
+    setIsResponding(true);
+    try {
+      await respondToInvitation(selectedEvent.id, status);
+      setEvents((prev) => prev.filter((e) => e.id !== selectedEvent.id));
+      setSelectedEvent(null);
+    } catch (err) {
+      console.error("Ошибка при ответе на приглашение:", err);
+    } finally {
+      setIsResponding(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+        <div className="flex justify-center items-center h-40">
+          <Spinner size="lg" />
+        </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return <p className="text-center text-gray-500">Нет приглашений на мероприятия.</p>;
+  }
 
   return (
       <>
@@ -57,20 +70,19 @@ const UpcomingEventsList: React.FC<Props> = ({
           {events.map((event) => (
               <div
                   key={event.id}
-                  onClick={() => onSelect(event)}
+                  onClick={() => setSelectedEvent(event)}
                   className="cursor-pointer border rounded-xl border-blue-500 p-4 shadow-sm hover:shadow-md transition"
               >
-                <h2 className="text-lg font-semibold">{event.title}</h2>
-                <p className="text-sm text-gray-700">{event.subtitle}</p>
-                <p className="text-sm text-gray-500">{event.description}</p>
+                <h2 className="text-lg font-semibold">{event.name}</h2>
+                <p className="text-sm text-gray-700">{event.description}</p>
                 <div className="flex gap-4 mt-2 text-sm text-gray-600 items-center">
               <span className="flex items-center gap-1">
                 <Calendar size={16} />
-                {event.date}
+                {new Date(event.timeStart).toLocaleDateString()}
               </span>
                   <span className="flex items-center gap-1">
                 <Clock size={16} />
-                    {event.time}
+                    {new Date(event.timeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
                 </div>
               </div>
@@ -80,24 +92,20 @@ const UpcomingEventsList: React.FC<Props> = ({
         <Modal isOpen={isOpen} onOpenChange={handleModalClose}>
           <ModalContent>
             <ModalHeader className="flex flex-col gap-1">
-              <h2 className="text-xl font-semibold">{selectedEvent?.title}</h2>
+              <h2 className="text-xl font-semibold">{selectedEvent?.name}</h2>
             </ModalHeader>
 
             <ModalBody>
               {selectedEvent ? (
                   <div className="text-gray-700 space-y-1">
-                    <p>Тип: {selectedEvent.type || "Не указан"}</p>
                     <p>Описание: {selectedEvent.description || "Нет описания"}</p>
-                    <p>Дата: {selectedEvent.date}</p>
-                    <p>Время: {selectedEvent.time}</p>
-                    <p>Адрес: {selectedEvent.address || "Не указан"}</p>
-                    <p>Организатор: {selectedEvent.creator || "Не указан"}</p>
-
-                    {selectedEvent.keywords && selectedEvent.keywords.length > 0 && (
+                    <p>Дата: {new Date(selectedEvent.timeStart).toLocaleDateString()}</p>
+                    <p>Время: {new Date(selectedEvent.timeStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p>Место: {selectedEvent.location || "Не указано"}</p>
+                    <p>Тип: {selectedEvent.type || "Не указан"}</p>
+                    {selectedEvent.keywords?.length > 0 && (
                         <div className="pt-2">
-                          <p className="text-sm font-medium text-gray-700 mb-1">
-                            Ключевые слова:
-                          </p>
+                          <p className="text-sm font-medium text-gray-700 mb-1">Ключевые слова:</p>
                           <div className="flex flex-wrap gap-2">
                             {selectedEvent.keywords.map((kw, idx) => (
                                 <span
@@ -118,10 +126,18 @@ const UpcomingEventsList: React.FC<Props> = ({
 
             <ModalFooter className="flex-col gap-2 items-stretch">
               <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onPress={onEnroll}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  onPress={() => handleRespond("approved")}
+                  isDisabled={isResponding}
               >
-                Записаться на мероприятие
+                {isResponding ? <Spinner size="sm" /> : "Принять приглашение"}
+              </Button>
+              <Button
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  onPress={() => handleRespond("rejected")}
+                  isDisabled={isResponding}
+              >
+                {isResponding ? <Spinner size="sm" /> : "Отклонить приглашение"}
               </Button>
             </ModalFooter>
           </ModalContent>
@@ -130,4 +146,4 @@ const UpcomingEventsList: React.FC<Props> = ({
   );
 };
 
-export default UpcomingEventsList;
+export default InvitedEventsList;

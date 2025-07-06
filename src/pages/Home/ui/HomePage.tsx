@@ -6,7 +6,7 @@ import BaseLayout from "@widgets/BaseLayout/ui/BaseLayout";
 import { WelcomeCard } from "@widgets/WelcomeCard";
 import { CustomCalendar } from "@features/calendary";
 import OfferEventCar from "@features/post-event/ui/NewIvent.tsx";
-import InvitationToEvent from "@widgets/Invitation_to_event/ui/InvitationToEvent.tsx";
+// import InvitationToEvent from "@widgets/Invitation_to_event/ui/InvitationToEvent.tsx";
 import StatisticsCard from "@/features/statistics";
 import SidebarMenu from "@widgets/Header/ui/Main_menu";
 import { Header } from "@widgets/Header";
@@ -55,7 +55,6 @@ const HomePage: React.FC = () => {
                     <OfferEventCar />
                     <CustomCalendar />
                     <CreateTeamModal />
-                    <InvitationToEvent />
                 </>
             }
         >

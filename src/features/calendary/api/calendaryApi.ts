@@ -29,21 +29,21 @@ const handleAxiosError = (error: unknown, defaultMessage: string): string => {
 
 export const fetchEvents = async (options?: { signal?: AbortSignal }): Promise<ApiEvent[]> => {
     try {
-        const response = await api.post<ApiEvent[]>('/Event/search', { signal: options?.signal });
-        console.log('API Call: GET /Event/my_events - Response:', response.data);
+        const response = await api.post<ApiEvent[]>('/Event/search', {}, { signal: options?.signal });
+        console.log('API Call: POST /Event/search - Response:', response.data);
+
         if (Array.isArray(response.data)) {
-            return response.data;
+            return response.data.filter(event => event.status === 'confirmed');
         } else if (response.status === 204) {
-            console.warn('API Call: GET /Event/my_events - Received 204 No Content, returning empty array.');
+            console.warn('API Call: POST /Event/search - Received 204 No Content, returning empty array.');
             return [];
         } else {
-            console.warn('API Call: GET /Event/my_events - Received non-array data:', response.data);
+            console.warn('API Call: POST /Event/search - Received non-array data:', response.data);
             return [];
         }
-
     } catch (error) {
         if (axios.isCancel(error)) {
-            console.log('API Call: GET /Event/my_events - Request was cancelled:', error.message);
+            console.log('API Call: POST /Event/search - Request was cancelled:', error.message);
             throw error;
         }
         const msg = handleAxiosError(error, 'Неизвестная ошибка при загрузке событий');

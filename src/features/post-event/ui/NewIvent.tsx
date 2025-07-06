@@ -117,8 +117,13 @@ export default function OfferEventCard() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
 
-  const [participants, setParticipants] = useState<string[]>([]);
-  const [teams, setTeams] = useState<string[]>([]);
+  // State for selected participants and teams (stores objects, not just IDs)
+  const [selectedParticipants, setSelectedParticipants] = useState<
+      Record<string, UserSearchResponse>
+  >({});
+  const [selectedTeams, setSelectedTeams] = useState<
+      Record<string, TeamSearchResponse>
+  >({});
 
   const [participantQuery, setParticipantQuery] = useState("");
   const [teamQuery, setTeamQuery] = useState("");
@@ -223,6 +228,41 @@ export default function OfferEventCard() {
     }
   };
 
+  // New functions for adding/removing participants and teams
+  const addParticipant = (user: UserSearchResponse) => {
+    if (!selectedParticipants[user.id]) {
+      setSelectedParticipants((prev) => ({ ...prev, [user.id]: user }));
+    }
+    setParticipantQuery("");
+    setDebouncedParticipantQuery("");
+    setFoundUsers([]);
+  };
+
+  const removeParticipant = (id: string) => {
+    setSelectedParticipants((prev) => {
+      const newObj = { ...prev };
+      delete newObj[id];
+      return newObj;
+    });
+  };
+
+  const addTeam = (team: TeamSearchResponse) => {
+    if (!selectedTeams[team.id]) {
+      setSelectedTeams((prev) => ({ ...prev, [team.id]: team }));
+    }
+    setTeamQuery("");
+    setDebouncedTeamQuery("");
+    setFoundTeams([]);
+  };
+
+  const removeTeam = (id: string) => {
+    setSelectedTeams((prev) => {
+      const newObj = { ...prev };
+      delete newObj[id];
+      return newObj;
+    });
+  };
+
   const handleSubmit = async () => {
     if (!range.start || !range.end) {
       addToast({
@@ -232,6 +272,10 @@ export default function OfferEventCard() {
       });
       return;
     }
+
+    const participantIds = Object.keys(selectedParticipants);
+    const teamIds = Object.keys(selectedTeams);
+
     try {
       await postEventSuggestion({
         name,
@@ -241,8 +285,9 @@ export default function OfferEventCard() {
         timeEnd: new Date(range.end).toISOString(),
         type,
         keywords,
-        participants,
-        teams,
+        // Pass only IDs to the API
+        participants: participantIds,
+        teams: teamIds,
       });
       onClose();
 
@@ -259,8 +304,8 @@ export default function OfferEventCard() {
       setType("general");
       setKeywords([]);
       setKeywordInput("");
-      setParticipants([]);
-      setTeams([]);
+      setSelectedParticipants({}); // Reset selected participants
+      setSelectedTeams({}); // Reset selected teams
       setParticipantQuery("");
       setTeamQuery("");
       setDebouncedParticipantQuery("");
@@ -319,7 +364,11 @@ export default function OfferEventCard() {
                   onChange={(e) => setLocation(e.target.value)}
               />
 
-              <CustomDateRangePicker label="Время проведения" value={range} onChange={setRange} />
+              <CustomDateRangePicker
+                  label="Время проведения"
+                  value={range}
+                  onChange={setRange}
+              />
 
               <label className="text-sm font-medium">Тип мероприятия</label>
               <select
@@ -327,8 +376,8 @@ export default function OfferEventCard() {
                   value={type}
                   onChange={(e) => {
                     setType(e.target.value as any);
-                    setParticipants([]);
-                    setTeams([]);
+                    setSelectedParticipants({});
+                    setSelectedTeams({});
                   }}
               >
                 <option value="general">Общее (для всех)</option>
@@ -372,26 +421,49 @@ export default function OfferEventCard() {
                         onChange={(e) => onParticipantQueryChange(e.target.value)}
                     />
                     {loadingUsers ? (
-                        <Spinner />
-                    ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {foundUsers.map((user) => (
-                              <button
-                                  key={user.id}
-                                  className="px-2 py-1 bg-blue-100 rounded hover:bg-blue-200 text-sm"
-                                  onClick={() => {
-                                    if (!participants.includes(user.id)) {
-                                      setParticipants([...participants, user.id]);
-                                    }
-                                  }}
-                              >
-                                {user.name} {user.surname} ({user.login})
-                              </button>
-                          ))}
+                        <div className="flex justify-center py-4">
+                          <Spinner size="md" label="Поиск пользователей..." />
                         </div>
+                    ) : foundUsers.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded">
+                          {foundUsers.map((user) =>
+                              !selectedParticipants[user.id] ? (
+                                  <button
+                                      key={user.id}
+                                      className="px-2 py-1 bg-blue-100 rounded hover:bg-blue-200 text-sm"
+                                      onClick={() => addParticipant(user)}
+                                  >
+                                    {user.name} {user.surname} ({user.login})
+                                  </button>
+                              ) : null
+                          )}
+                        </div>
+                    ) : debouncedParticipantQuery.length >= 2 && !loadingUsers ? (
+                        <p className="text-sm text-gray-500">
+                          Пользователи не найдены.
+                        </p>
+                    ) : (
+                        <p className="text-sm text-gray-500">
+                          Введите не менее 2 символов для поиска.
+                        </p>
                     )}
-                    <div className="text-xs text-gray-500">
-                      Выбранные ID: {participants.join(", ")}
+
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {Object.keys(selectedParticipants).length > 0 ? (
+                          Object.values(selectedParticipants).map((user) => (
+                              <Chip
+                                  key={user.id}
+                                  variant="flat"
+                                  onClose={() => removeParticipant(user.id)}
+                              >
+                                {user.name} {user.surname}
+                              </Chip>
+                          ))
+                      ) : (
+                          <p className="text-sm text-gray-500">
+                            Участники не выбраны.
+                          </p>
+                      )}
                     </div>
                   </>
               )}
@@ -405,28 +477,44 @@ export default function OfferEventCard() {
                         onChange={(e) => onTeamQueryChange(e.target.value)}
                     />
                     {loadingTeams ? (
-                        <Spinner />
-                    ) : Array.isArray(foundTeams) && foundTeams.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {foundTeams.map((team) => (
-                              <button
+                        <div className="flex justify-center py-4">
+                          <Spinner size="md" label="Поиск команд..." />
+                        </div>
+                    ) : foundTeams.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto border p-2 rounded">
+                          {foundTeams.map((team) =>
+                              !selectedTeams[team.id] ? (
+                                  <button
+                                      key={team.id}
+                                      className="px-2 py-1 bg-green-100 rounded hover:bg-green-200 text-sm"
+                                      onClick={() => addTeam(team)}
+                                  >
+                                    {team.name}
+                                  </button>
+                              ) : null
+                          )}
+                        </div>
+                    ) : debouncedTeamQuery.length >= 2 && !loadingTeams ? (
+                        <div className="text-gray-500 text-sm">Команды не найдены</div>
+                    ) : (
+                        <p className="text-sm text-gray-500">
+                          Введите не менее 2 символов для поиска.
+                        </p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {Object.keys(selectedTeams).length > 0 ? (
+                          Object.values(selectedTeams).map((team) => (
+                              <Chip
                                   key={team.id}
-                                  className="px-2 py-1 bg-green-100 rounded hover:bg-green-200 text-sm"
-                                  onClick={() => {
-                                    if (!teams.includes(team.id)) {
-                                      setTeams([...teams, team.id]);
-                                    }
-                                  }}
+                                  variant="flat"
+                                  onClose={() => removeTeam(team.id)}
                               >
                                 {team.name}
-                              </button>
-                          ))}
-                        </div>
-                    ) : (
-                        <div className="text-gray-500 text-sm">Команды не найдены</div>
-                    )}
-                    <div className="text-xs text-gray-500">
-                      Выбранные ID: {teams.join(", ")}
+                              </Chip>
+                          ))
+                      ) : (
+                          <p className="text-sm text-gray-500">Команды не выбраны.</p>
+                      )}
                     </div>
                   </>
               )}
