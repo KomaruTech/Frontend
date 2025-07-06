@@ -8,8 +8,9 @@ import type { Event } from "@entities/event";
 import { Header } from "@widgets/Header";
 import TabSwitcher from "@widgets/TabSwitcher";
 import type {TabItem} from "@widgets/TabSwitcher/ui/TabSwitcher.tsx";
+import InvitedEventsList from "@features/events/ui/UpcomingEventsList.tsx";
 
-type TabKey = "past" | "upcoming";
+type TabKey = "past" | "upcoming" | "process";
 
 export default function EventsPage() {
     const [activeTab, setActiveTab] = useState<TabKey>("past");
@@ -17,7 +18,8 @@ export default function EventsPage() {
 
     const tabOptions: TabItem<TabKey>[] = [
         { label: "Твои мероприятия", value: "past" },
-        { label: "Предстоящие", value: "upcoming" },
+        { label: "Приглашения", value: "upcoming" },
+        { label: "В обработке", value: "process" },
     ];
 
     return (
@@ -46,55 +48,9 @@ export default function EventsPage() {
                         onSelect={setSelectedEvent}
                     />
                 )}
-                {activeTab === "upcoming"}
+                {activeTab === "upcoming" && <InvitedEventsList/>}
+                {activeTab === "process" && <InvitedEventsList/>}
             </div>
         </BaseLayout>
     );
 }
-// return (
-//     <BaseLayout
-//         leftAside={<SidebarMenu />}
-//         rightAside={
-//             <>
-//                 <Header />
-//                 <OfferEventCar />
-//                 <CustomCalendar />
-//             </>
-//         }
-//     >
-//         <div className="flex items-center justify-between flex-wrap gap-4">
-//             <div className="flex bg-gray-200 rounded-full p-1 w-fit">
-//                 <button
-//                     onClick={() => setActiveTab("past")}
-//                     className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
-//                         activeTab === "past"
-//                             ? "bg-gradient-to-r from-blue-600 to-blue-300 text-white"
-//                             : "text-gray-600 hover:text-black"
-//                     }`}
-//                 >
-//                     Твои мероприятия
-//                 </button>
-//                 <button
-//                     onClick={() => setActiveTab("upcoming")}
-//                     className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
-//                         activeTab === "upcoming"
-//                             ? "bg-gradient-to-r from-blue-600 to-blue-300 text-white"
-//                             : "text-gray-600 hover:text-black"
-//                     }`}
-//                 >
-//                     Предстоящие
-//                 </button>
-//             </div>
-//         </div>
-//
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-//             {activeTab === "past" ? (
-//                 <PastEventsList
-//                     selectedEvent={selectedEvent}
-//                     onSelect={setSelectedEvent}
-//                 />
-//             ) : (
-//                 <></>
-//             )}
-//         </div>
-//     </BaseLayout>

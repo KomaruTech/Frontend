@@ -65,13 +65,12 @@ export default function TeamCard({
         console.log("TeamCard: Current User ID:", currentUserId);
         console.log("TeamCard: Current User Role:", currentUserRole);
         const isOwner = currentUserId === initialTeam.ownerId;
-        const isAdmin = currentUserRole === "admin";
+        const isAdmin = currentUserRole === "administrator";
         const canManage = isOwner || isAdmin;
         console.log("TeamCard: Is owner?", isOwner);
         console.log("TeamCard: Is admin?", isAdmin);
         console.log("TeamCard: Can manage team (owner or admin)?", canManage);
 
-        // ЗАПРОС ИНФОРМАЦИИ О ВЛАДЕЛЬЦЕ ПРИ ИЗМЕНЕНИИ initialTeam.ownerId
         const fetchOwnerDetails = async () => {
             if (!initialTeam.ownerId) {
                 setOwnerInfo(null);
