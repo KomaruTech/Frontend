@@ -33,7 +33,9 @@ const HomePage: React.FC = () => {
             fetchMyProfile(authUser.id)
                 .then((data) => {
                     dispatch(fetchProfileSuccess(data));
-                    dispatch(setUserProfileData({ ...authUser, ...data }));
+                    if (authUser) {
+                        dispatch(setUserProfileData({ ...authUser, ...data }));
+                    }
                 })
                 .catch((err) => {
                     const msg =
@@ -44,7 +46,7 @@ const HomePage: React.FC = () => {
                     console.error("Ошибка при загрузке профиля на главной странице:", msg);
                 });
         }
-    }, [dispatch, authUser.id, authUser]);
+    }, [dispatch, authUser]);
 
     return (
         <BaseLayout
@@ -58,7 +60,6 @@ const HomePage: React.FC = () => {
                 </>
             }
         >
-            {/* Центр: контент */}
             <WelcomeCard />
             <StatisticsCard />
         </BaseLayout>
