@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, Clock, Edit, Trash } from "lucide-react";
 import {
   Button,
@@ -199,7 +199,7 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
       onEditModalClose();
       onDeleteConfirmClose();
     }
-  }, [selectedEvent, onOpen, onClose]);
+  }, [selectedEvent, onOpen, onClose, onEditModalClose, onDeleteConfirmClose]);
 
   const handleClose = () => {
     onSelect(null);

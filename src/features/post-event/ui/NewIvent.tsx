@@ -21,6 +21,8 @@ import {
   type TeamSearchResponse,
 } from "../api/postEventApi"; // поправлен путь
 
+type ApiResponse<T> = T[] | { data: T[] };
+
 function toLocalDateTimeInputValue(date: Date) {
   const pad = (n: number) => n.toString().padStart(2, "0");
 
@@ -117,7 +119,6 @@ export default function OfferEventCard() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
 
-  // State for selected participants and teams (stores objects, not just IDs)
   const [selectedParticipants, setSelectedParticipants] = useState<
       Record<string, UserSearchResponse>
   >({});
@@ -167,11 +168,11 @@ export default function OfferEventCard() {
     if (type === "personal" && debouncedParticipantQuery.length >= 2) {
       setLoadingUsers(true);
       searchUsers(debouncedParticipantQuery)
-          .then((res) => {
+          .then((res: ApiResponse<UserSearchResponse>) => { // FIX 1: Use specific ApiResponse type
             if (Array.isArray(res)) {
               setFoundUsers(res);
-            } else if (res && Array.isArray((res as any).data)) {
-              setFoundUsers((res as any).data);
+            } else if (res && Array.isArray(res.data)) {
+              setFoundUsers(res.data);
             } else {
               setFoundUsers([]);
               console.warn("Неверный формат ответа searchUsers:", res);
@@ -190,11 +191,11 @@ export default function OfferEventCard() {
     if (type === "group" && debouncedTeamQuery.length >= 2) {
       setLoadingTeams(true);
       searchTeams(debouncedTeamQuery)
-          .then((res) => {
+          .then((res: ApiResponse<TeamSearchResponse>) => { // FIX 1: Use specific ApiResponse type
             if (Array.isArray(res)) {
               setFoundTeams(res);
-            } else if (res && Array.isArray((res as any).data)) {
-              setFoundTeams((res as any).data);
+            } else if (res && Array.isArray(res.data)) {
+              setFoundTeams(res.data);
             } else {
               setFoundTeams([]);
               console.warn("Неверный формат ответа searchTeams:", res);
@@ -228,7 +229,6 @@ export default function OfferEventCard() {
     }
   };
 
-  // New functions for adding/removing participants and teams
   const addParticipant = (user: UserSearchResponse) => {
     if (!selectedParticipants[user.id]) {
       setSelectedParticipants((prev) => ({ ...prev, [user.id]: user }));
@@ -263,7 +263,7 @@ export default function OfferEventCard() {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async () => { // FIX 2: Add async keyword
     if (!range.start || !range.end) {
       addToast({
         title: "Ошибка",
@@ -285,7 +285,6 @@ export default function OfferEventCard() {
         timeEnd: new Date(range.end).toISOString(),
         type,
         keywords,
-        // Pass only IDs to the API
         participants: participantIds,
         teams: teamIds,
       });
@@ -304,17 +303,23 @@ export default function OfferEventCard() {
       setType("general");
       setKeywords([]);
       setKeywordInput("");
-      setSelectedParticipants({}); // Reset selected participants
-      setSelectedTeams({}); // Reset selected teams
+      setSelectedParticipants({});
+      setSelectedTeams({});
       setParticipantQuery("");
       setTeamQuery("");
       setDebouncedParticipantQuery("");
       setDebouncedTeamQuery("");
       setRange({ start: initialDateTime, end: initialDateTime });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = "Ошибка при отправке";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       addToast({
         title: "Ошибка",
-        description: error.message || "Ошибка при отправке",
+        description: errorMessage,
         color: "danger",
       });
     }
@@ -375,7 +380,8 @@ export default function OfferEventCard() {
                   className="p-2 rounded-md border border-gray-300"
                   value={type}
                   onChange={(e) => {
-                    setType(e.target.value as any);
+                    // FIX 3: Use specific type cast instead of any
+                    setType(e.target.value as "general" | "group" | "personal");
                     setSelectedParticipants({});
                     setSelectedTeams({});
                   }}
@@ -385,7 +391,6 @@ export default function OfferEventCard() {
                 <option value="personal">Личное (для участников)</option>
               </select>
 
-              {/* Ключевые слова */}
               <div className="flex flex-col gap-2">
                 <label className="font-semibold">Ключевые слова</label>
                 <div className="flex gap-2 flex-wrap">
@@ -408,7 +413,7 @@ export default function OfferEventCard() {
                       onChange={(e) => setKeywordInput(e.target.value)}
                       onKeyDown={handleKeywordKeyDown}
                   />
-                  <Button onClick={addKeyword}>Добавить</Button>
+                  <Button onPress={addKeyword}>Добавить</Button>
                 </div>
               </div>
 
@@ -520,10 +525,10 @@ export default function OfferEventCard() {
               )}
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" onClick={onClose}>
+              <Button variant="ghost" onPress={onClose}>
                 Отмена
               </Button>
-              <Button onClick={handleSubmit}>Отправить</Button>
+              <Button onPress={handleSubmit}>Отправить</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>

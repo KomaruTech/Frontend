@@ -34,7 +34,7 @@ const InvitedEventsList: React.FC = () => {
   useEffect(() => {
     if (selectedEvent) onOpen();
     else onClose();
-  }, [selectedEvent]);
+  }, [onClose, onOpen, selectedEvent]);
 
   const handleModalClose = () => setSelectedEvent(null);
 

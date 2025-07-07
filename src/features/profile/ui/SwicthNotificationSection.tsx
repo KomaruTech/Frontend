@@ -26,6 +26,7 @@ export const SwitchNotificationSection: React.FC<SwitchNotificationSectionProps>
     useEffect(() => {
         fetchNotificationPreferences()
             .then(data => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { id, ...prefs } = data;
                 setPreferences(prefs);
             })

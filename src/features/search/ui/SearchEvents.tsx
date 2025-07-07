@@ -28,16 +28,19 @@ export default function SearchEvents() {
             const payload: SearchEventRequest = {
                 name: trimmedQuery,
                 status: 'confirmed',
-                // keywords removed for name-only search
             };
 
             const results = await searchEvents(payload);
             const list = Array.isArray(results) ? results : [results];
             const filtered = list.filter(event => event.description && event.timeStart && event.timeEnd);
             setSearchResults(filtered);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error searching events:", err);
-            setError(err.message || 'Произошла ошибка при поиске.');
+
+            const errorMessage =
+                err instanceof Error ? err.message : 'Произошла ошибка при поиске.';
+
+            setError(errorMessage);
             setSearchResults([]);
         } finally {
             setIsLoading(false);

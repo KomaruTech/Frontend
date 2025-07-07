@@ -205,7 +205,7 @@ const ProcessEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
             onEditModalClose();
             onDeleteConfirmClose();
         }
-    }, [selectedEvent, onOpen, onClose]);
+    }, [selectedEvent, onOpen, onClose, onEditModalClose, onDeleteConfirmClose]);
 
     const handleClose = () => {
         onSelect(null);

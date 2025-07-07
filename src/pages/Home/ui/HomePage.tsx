@@ -44,7 +44,7 @@ const HomePage: React.FC = () => {
                     console.error("Ошибка при загрузке профиля на главной странице:", msg);
                 });
         }
-    }, [dispatch, authUser?.id]);
+    }, [dispatch, authUser.id, authUser]);
 
     return (
         <BaseLayout
