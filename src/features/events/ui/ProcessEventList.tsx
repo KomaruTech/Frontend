@@ -145,20 +145,27 @@ const ProcessEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
         setLoading(true);
         setError(null);
         const controller = new AbortController();
+
         try {
             const data = await fetchEventsForPastList({ signal: controller.signal });
             setEvents(data.map(transformApiEvent));
-        } catch (err: never) {
+        } catch (err: unknown) {
             if (!axios.isCancel(err)) {
-                setError(err.message);
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError("Произошла ошибка при загрузке мероприятий.");
+                }
             }
         } finally {
             if (!controller.signal.aborted) {
                 setLoading(false);
             }
         }
+
         return () => controller.abort();
     };
+
 
     useEffect(() => {
         loadEvents();
@@ -277,8 +284,12 @@ const ProcessEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
             await loadEvents();
             onEditModalClose();
             onSelect(null);
-        } catch (err: any) {
-            setError(err.message || "Не удалось обновить мероприятие.");
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("Не удалось обновить мероприятие.");
+            }
         } finally {
             setIsUpdating(false);
         }
@@ -294,8 +305,12 @@ const ProcessEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
             await loadEvents();
             onDeleteConfirmClose();
             onSelect(null);
-        } catch (err: any) {
-            setError(err.message || "Не удалось удалить мероприятие.");
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("Не удалось удалить мероприятие.");
+            }
         } finally {
             setIsDeleting(false);
         }
@@ -484,7 +499,7 @@ const ProcessEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
                                     onChange={handleEditInputChange}
                                 >
                                     {Object.entries(eventTypeTranslations).map(([key, value]) => (
-                                        <SelectItem key={key} value={key}>
+                                        <SelectItem key={key}>
                                             {value}
                                         </SelectItem>
                                     ))}
