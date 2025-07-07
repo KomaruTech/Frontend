@@ -148,9 +148,10 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
     try {
       const data = await fetchEventsForPastList({ signal: controller.signal });
       setEvents(data.map(transformApiEvent));
-    } catch (err: never) {
+    } catch (err) {
       if (!axios.isCancel(err)) {
-        setError(err.message);
+        const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка при загрузке событий';
+        setError(errorMessage);
       }
     } finally {
       if (!controller.signal.aborted) {
@@ -277,11 +278,16 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
       await loadEvents();
       onEditModalClose();
       onSelect(null);
-    } catch (err: any) {
-      setError(err.message || "Не удалось обновить мероприятие.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Не удалось обновить мероприятие.");
+      }
     } finally {
       setIsUpdating(false);
     }
+
   };
 
   const handleConfirmDelete = async () => {
@@ -294,12 +300,17 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
       await loadEvents();
       onDeleteConfirmClose();
       onSelect(null);
-    } catch (err: any) {
-      setError(err.message || "Не удалось удалить мероприятие.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Не удалось удалить мероприятие.");
+      }
     } finally {
       setIsDeleting(false);
     }
   };
+
 
 
   if (loading) {
@@ -484,7 +495,7 @@ const PastEventsList: React.FC<Props> = ({ onSelect, selectedEvent }) => {
                         onChange={handleEditInputChange}
                     >
                       {Object.entries(eventTypeTranslations).map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
+                          <SelectItem key={key}>
                             {value}
                           </SelectItem>
                       ))}
