@@ -1,5 +1,7 @@
 import LoginForm from '@features/auth/ui/LoginForm';
 import { Link } from "@heroui/react";
+import BgImage from '@shared/assets/images/LoginPage/BG-image.png';
+import Logo from '@shared/assets/images/Logo.svg';
 
 const LoginPage = () => (
     <section className="flex items-center justify-center min-h-screen bg-gray-100 px-4 py-8">
@@ -8,7 +10,7 @@ const LoginPage = () => (
             <div className="sm:w-1/2 w-full flex flex-col justify-center items-start p-6 sm:p-[6%]">
                 <div className="flex items-center mb-6">
                     <img
-                        src="/images/Logo.svg"
+                        src={Logo}
                         alt="Логотип"
                         className="w-10 h-10 mr-4"
                     />
@@ -27,7 +29,7 @@ const LoginPage = () => (
             </div>
             <div className="sm:w-1/2 w-full h-60 sm:h-auto relative overflow-hidden">
                 <img
-                    src="/images/LoginPage/BG-image.png"
+                    src={BgImage}
                     alt="Background"
                     className="w-full h-full object-cover object-center"
                 />
